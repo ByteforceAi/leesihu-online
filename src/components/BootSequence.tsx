@@ -72,6 +72,44 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
       onClick={handleEnter}
       onTouchStart={handleEnter}
     >
+      {/* Sparkle particles */}
+      {phase !== "black" && phase !== "done" && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {Array.from({ length: 30 }).map((_, i) => {
+            const x = Math.random() * 100;
+            const y = Math.random() * 100;
+            const size = 1 + Math.random() * 2;
+            const delay = Math.random() * 3;
+            const duration = 2 + Math.random() * 3;
+            return (
+              <motion.div
+                key={i}
+                className="absolute rounded-full"
+                style={{
+                  left: `${x}%`,
+                  top: `${y}%`,
+                  width: size,
+                  height: size,
+                  background: i % 3 === 0 ? "#30D158" : i % 3 === 1 ? "#0EA5E9" : "rgba(255,255,255,0.8)",
+                  boxShadow: `0 0 ${size * 3}px ${i % 3 === 0 ? "rgba(48,209,88,0.5)" : i % 3 === 1 ? "rgba(14,165,233,0.5)" : "rgba(255,255,255,0.3)"}`,
+                }}
+                animate={{
+                  opacity: [0, 1, 0],
+                  scale: [0, 1.5, 0],
+                  y: [0, -20 - Math.random() * 30],
+                }}
+                transition={{
+                  duration,
+                  delay,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+            );
+          })}
+        </div>
+      )}
+
       {/* White flash */}
       {phase === "flash" && (
         <motion.div
