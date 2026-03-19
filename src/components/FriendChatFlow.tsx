@@ -295,6 +295,32 @@ export default function FriendChatFlow({ onClose }: Props) {
             ))}
           </AnimatePresence>
 
+          {/* Choice buttons (INLINE in dialogue) */}
+          {step === 0 && messages.length >= 2 && !typing && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-2.5"
+            >
+              <motion.button
+                whileTap={{ scale: 0.96 }}
+                onClick={() => handleChoice(true)}
+                className="w-full py-3.5 rounded-2xl text-[16px] font-semibold cursor-pointer active:brightness-90"
+                style={{ background: "#0A84FF", color: "#fff" }}
+              >
+                네! 😄
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.96 }}
+                onClick={() => handleChoice(false)}
+                className="w-full py-3.5 rounded-2xl text-[15px] font-medium cursor-pointer active:bg-white/10"
+                style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)" }}
+              >
+                다음에 할게요
+              </motion.button>
+            </motion.div>
+          )}
+
           {/* Typing indicator */}
           {typing && (
             <motion.div
@@ -318,31 +344,7 @@ export default function FriendChatFlow({ onClose }: Props) {
         </div>
       </div>
 
-      {/* ── CHOICE BUTTONS (Step 0) ───────────────────────── */}
-      {step === 0 && messages.length >= 2 && !typing && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex-shrink-0 px-5 pb-6 pt-2 space-y-3"
-        >
-          <motion.button
-            whileTap={{ scale: 0.96 }}
-            onClick={() => handleChoice(true)}
-            className="w-full py-4 rounded-2xl text-[16px] font-semibold cursor-pointer active:brightness-90"
-            style={{ background: "#0A84FF", color: "#fff" }}
-          >
-            네! 😄
-          </motion.button>
-          <motion.button
-            whileTap={{ scale: 0.96 }}
-            onClick={() => handleChoice(false)}
-            className="w-full py-4 rounded-2xl text-[16px] font-medium cursor-pointer active:bg-white/10"
-            style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}
-          >
-            다음에 할게요
-          </motion.button>
-        </motion.div>
-      )}
+      {/* Choice buttons moved INLINE into dialogue area above */}
 
       {/* ── INPUT (Step 1 & 2) ────────────────────────────── */}
       {(step === 1 || step === 2) && !typing && (
