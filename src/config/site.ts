@@ -15,7 +15,7 @@ export const SITE_CONFIG = {
     },
     {
       id: "simulator",
-      name: "연동",
+      name: "바이브코딩",
       description: "AI Game Factory — AI 게임 생성기",
       status: "smooth" as const,
       url: "https://ai-game-factory.vercel.app/",

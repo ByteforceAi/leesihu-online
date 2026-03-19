@@ -326,51 +326,8 @@ export default function HomePage() {
                       />
                     </div>
 
-                    {/* Divider */}
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="flex-1 h-px bg-white/6" />
-                      <span className="text-[11px] text-white/20 tracking-wider">QUICK ACCESS</span>
-                      <div className="flex-1 h-px bg-white/6" />
-                    </div>
-
-                    {/* Server list (compact) */}
-                    <div
-                      className="rounded-2xl overflow-hidden mb-4"
-                      style={{ background: "rgba(255,255,255,0.06)" }}
-                    >
-                      {SITE_CONFIG.servers.map((server, index) => {
-                        const isLoading = loadingId === server.id;
-                        const isLast = index === SITE_CONFIG.servers.length - 1;
-                        return (
-                          <div key={server.id}>
-                            <motion.button
-                              onClick={() => handleServerTap(server)}
-                              disabled={server.disabled || isLoading}
-                              className="w-full text-left cursor-pointer active:bg-white/5 transition-colors"
-                              whileTap={{ scale: 0.98 }}
-                            >
-                              <div className="flex items-center gap-3 px-4 py-3">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <h3 className="text-[15px] font-semibold text-white">{server.name}</h3>
-                                    <div className="w-[5px] h-[5px] rounded-full bg-[#30D158]" />
-                                  </div>
-                                  <p className="text-[12px] text-white/35">{server.description}</p>
-                                </div>
-                                {isLoading ? (
-                                  <div className="w-5 h-5 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
-                                ) : (
-                                  <span className="text-white/20 text-sm">→</span>
-                                )}
-                              </div>
-                            </motion.button>
-                            {!isLast && (
-                              <div className="ml-4 mr-4 h-px bg-white/5" />
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+                    {/* Footer spacer */}
+                    <div className="h-4" />
                   </div>
                 </motion.div>
               )}
