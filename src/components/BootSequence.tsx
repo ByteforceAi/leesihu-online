@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 
 interface BootSequenceProps {
@@ -6,66 +6,59 @@ interface BootSequenceProps {
 }
 
 export default function BootSequence({ onComplete }: BootSequenceProps) {
-  const [phase, setPhase] = useState<"black" | "logo" | "typing" | "flash" | "done">("black");
+  const [phase, setPhase] = useState<"black" | "typing" | "ready" | "flash" | "done">("black");
   const [typedText, setTypedText] = useState("");
   const [showCursor, setShowCursor] = useState(true);
   const [progress, setProgress] = useState(0);
-
   const fullText = "leesihu.online";
+  const charIndex = useRef(0);
 
+  // Cursor blink
   useEffect(() => {
-    // Phase 0: Pure black (0.3s)
-    const t0 = setTimeout(() => setPhase("logo"), 300);
+    const id = setInterval(() => setShowCursor((c) => !c), 530);
+    return () => clearInterval(id);
+  }, []);
 
-    // Phase 1: Logo appears (0.8s)
-    const t1 = setTimeout(() => setPhase("typing"), 1100);
-
-    // Phase 2: Typewriter starts at 1.1s
-    let charIndex = 0;
-    const typeInterval = setInterval(() => {
-      if (phase !== "typing" && phase !== "logo") return;
-      if (charIndex < fullText.length) {
-        charIndex++;
-        setTypedText(fullText.slice(0, charIndex));
-      }
-    }, 100); // 100ms per character
+  // Boot phases
+  useEffect(() => {
+    // 0.5s: start typing
+    const t1 = setTimeout(() => {
+      setPhase("typing");
+      // Typewriter interval
+      const typeId = setInterval(() => {
+        charIndex.current++;
+        if (charIndex.current >= fullText.length) {
+          clearInterval(typeId);
+          setTypedText(fullText);
+          // 0.5s after typing done → ready
+          setTimeout(() => setPhase("ready"), 500);
+        } else {
+          setTypedText(fullText.slice(0, charIndex.current));
+        }
+      }, 90);
+    }, 500);
 
     // Progress bar
-    const progressInterval = setInterval(() => {
-      setProgress((p) => {
-        if (p >= 100) return 100;
-        const remaining = 100 - p;
-        return Math.min(100, p + remaining * 0.04 + 0.5);
-      });
+    const progressId = setInterval(() => {
+      setProgress((p) => Math.min(100, p + (100 - p) * 0.04 + 0.5));
     }, 30);
 
-    // Phase 3: Flash at 3.2s
-    const t3 = setTimeout(() => {
-      setProgress(100);
-      setPhase("flash");
-    }, 3200);
+    return () => {
+      clearTimeout(t1);
+      clearInterval(progressId);
+    };
+  }, []);
 
-    // Phase 4: Done at 3.7s
-    const t4 = setTimeout(() => {
+  // Handle tap to enter
+  const handleEnter = () => {
+    if (phase !== "ready") return;
+    setPhase("flash");
+    setProgress(100);
+    setTimeout(() => {
       setPhase("done");
       onComplete();
-    }, 3700);
-
-    // Cursor blink
-    const cursorInterval = setInterval(() => {
-      setShowCursor((c) => !c);
-    }, 530);
-
-    return () => {
-      clearTimeout(t0);
-      clearTimeout(t1);
-      clearTimeout(t3);
-      clearTimeout(t4);
-      clearInterval(typeInterval);
-      clearInterval(progressInterval);
-      clearInterval(cursorInterval);
-    };
-  }, [onComplete]);
+    }, 500);
+  };
 
   if (phase === "done") return null;
 
@@ -74,8 +67,10 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
       initial={{ opacity: 1 }}
       animate={{ opacity: phase === "flash" ? 0 : 1 }}
       transition={{ duration: 0.5 }}
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-center"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center cursor-pointer"
       style={{ background: "#000" }}
+      onClick={handleEnter}
+      onTouchStart={handleEnter}
     >
       {/* White flash */}
       {phase === "flash" && (
@@ -87,17 +82,14 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
         />
       )}
 
-      {/* Logo */}
+      {/* Logo + text */}
       <motion.div
         initial={{ opacity: 0, scale: 0.7 }}
-        animate={{
-          opacity: phase !== "black" ? 1 : 0,
-          scale: phase !== "black" ? 1 : 0.7,
-        }}
+        animate={{ opacity: phase !== "black" ? 1 : 0, scale: phase !== "black" ? 1 : 0.7 }}
         transition={{ duration: 0.6, ease: [0.2, 0.8, 0.2, 1] }}
         className="flex flex-col items-center"
       >
-        {/* Logo mark */}
+        {/* Logo */}
         <div className="relative mb-8">
           <motion.div
             className="w-16 h-16 rounded-2xl flex items-center justify-center"
@@ -119,57 +111,66 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
 
         {/* Typewriter text */}
         <div className="h-8 flex items-center justify-center mb-2">
-          <motion.span
+          <span
             className="text-xl tracking-[6px] font-medium"
-            style={{ color: "rgba(255,255,255,0.9)", fontFamily: "'Inter', sans-serif" }}
+            style={{ color: "rgba(255,255,255,0.9)" }}
           >
             {typedText}
-            <motion.span
+            <span
               className="inline-block w-[2px] h-[20px] ml-[2px] align-middle"
               style={{
                 background: "#30D158",
-                opacity: showCursor ? 1 : 0,
+                opacity: showCursor && phase !== "ready" ? 1 : 0,
               }}
             />
-          </motion.span>
+          </span>
         </div>
 
-        {/* Subtitle (fades in after typing) */}
+        {/* Subtitle */}
         <motion.p
           initial={{ opacity: 0 }}
-          animate={{ opacity: typedText.length >= fullText.length ? 0.3 : 0 }}
+          animate={{ opacity: typedText === fullText ? 0.3 : 0 }}
           transition={{ duration: 0.5 }}
-          className="text-xs tracking-[4px] mb-10"
+          className="text-xs tracking-[4px] mb-8"
           style={{ color: "rgba(255,255,255,0.3)" }}
         >
           GAME CREATOR
         </motion.p>
-      </motion.div>
 
-      {/* Progress bar */}
-      {phase !== "black" && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="w-40"
-        >
-          <div
-            className="h-[2px] rounded-full overflow-hidden"
-            style={{ background: "rgba(255,255,255,0.06)" }}
+        {/* Progress bar OR "tap to enter" */}
+        {phase === "ready" ? (
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: [0.3, 0.7, 0.3] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            className="text-center"
           >
-            <motion.div
-              className="h-full rounded-full"
-              style={{
-                width: `${progress}%`,
-                background: "linear-gradient(90deg, #30D158, #0EA5E9)",
-                boxShadow: "0 0 8px rgba(48,209,88,0.4)",
-                transition: "width 0.1s ease-out",
-              }}
-            />
-          </div>
-        </motion.div>
-      )}
+            <p className="text-[13px] text-white/40 tracking-wider">터치하여 입장</p>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="w-40"
+          >
+            <div
+              className="h-[2px] rounded-full overflow-hidden"
+              style={{ background: "rgba(255,255,255,0.06)" }}
+            >
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${progress}%`,
+                  background: "linear-gradient(90deg, #30D158, #0EA5E9)",
+                  boxShadow: "0 0 8px rgba(48,209,88,0.4)",
+                  transition: "width 0.1s ease-out",
+                }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </motion.div>
     </motion.div>
   );
 }

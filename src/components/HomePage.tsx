@@ -6,6 +6,8 @@ import BootSequence from "./BootSequence";
 import Guestbook from "./Guestbook";
 import Timeline from "./Timeline";
 import VisitorCount from "./VisitorCount";
+import AdminNotice from "./AdminNotice";
+import ChatBot from "./ChatBot";
 import { SITE_CONFIG } from "../config/site";
 
 type Tab = "home" | "timeline" | "guestbook";
@@ -124,6 +126,9 @@ export default function HomePage() {
 
                   {/* Content */}
                   <div className="max-w-[600px] mx-auto px-5 pt-6 pb-28">
+
+                    {/* Admin Notice */}
+                    <AdminNotice />
 
                     {/* Section: 플레이 */}
                     <h2 className="text-[22px] font-bold text-white mb-3">플레이</h2>
@@ -275,6 +280,9 @@ export default function HomePage() {
 
             </AnimatePresence>
           </div>
+
+          {/* ══════ CHATBOT ══════ */}
+          <ChatBot />
 
           {/* ══════ PREMIUM TAB BAR ══════ */}
           <PremiumTabBar
