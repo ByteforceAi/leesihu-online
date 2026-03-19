@@ -10,6 +10,7 @@ import ChatBot from "./ChatBot";
 import DynamicIsland from "./DynamicIsland";
 import MinecraftParticles from "./MinecraftParticles";
 import FriendChatFlow from "./FriendChatFlow";
+import MineRunner from "./MineRunner";
 import { SITE_CONFIG } from "../config/site";
 import { playTabSwitch, playButtonClick } from "../lib/sounds";
 
@@ -150,6 +151,7 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [showFriendAdd, setShowFriendAdd] = useState(false);
+  const [showMiniGame, setShowMiniGame] = useState(false);
   const [jiggleMode, setJiggleMode] = useState(false);
   const [visitorCount] = useState(1);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -330,13 +332,22 @@ export default function HomePage() {
                         />
                       ))}
                       <AppIcon
+                        icon="⛏️"
+                        label="미니게임"
+                        gradient="linear-gradient(135deg, #8B4513, #D2691E)"
+                        onClick={() => setShowMiniGame(true)}
+                        delay={0.18}
+                        jiggling={jiggleMode}
+                        index={SITE_CONFIG.servers.length}
+                      />
+                      <AppIcon
                         icon="💬"
                         label="방명록"
                         gradient="linear-gradient(135deg, #845ef7, #6366F1)"
                         onClick={() => setActiveTab("guestbook")}
                         delay={0.26}
                         jiggling={jiggleMode}
-                        index={SITE_CONFIG.servers.length}
+                        index={SITE_CONFIG.servers.length + 1}
                       />
                       <AppIcon
                         icon="📅"
@@ -345,17 +356,16 @@ export default function HomePage() {
                         onClick={() => setActiveTab("timeline")}
                         delay={0.34}
                         jiggling={jiggleMode}
-                        index={SITE_CONFIG.servers.length + 1}
+                        index={SITE_CONFIG.servers.length + 2}
                       />
                       <AppIcon
                         icon="🤝"
                         label="친구추가"
                         gradient="linear-gradient(135deg, #30D158, #20c997)"
                         onClick={() => setShowFriendAdd(true)}
-
                         delay={0.42}
                         jiggling={jiggleMode}
-                        index={SITE_CONFIG.servers.length + 2}
+                        index={SITE_CONFIG.servers.length + 3}
                       />
                       <AppIcon
                         icon={isPlaying ? "⏸️" : "🎵"}
@@ -366,7 +376,7 @@ export default function HomePage() {
                         onClick={toggleMusic}
                         delay={0.5}
                         jiggling={jiggleMode}
-                        index={SITE_CONFIG.servers.length + 3}
+                        index={SITE_CONFIG.servers.length + 4}
                       />
                     </div>
 
@@ -430,6 +440,13 @@ export default function HomePage() {
           <AnimatePresence>
             {showFriendAdd && (
               <FriendChatFlow onClose={() => setShowFriendAdd(false)} />
+            )}
+          </AnimatePresence>
+
+          {/* Mine Runner Game */}
+          <AnimatePresence>
+            {showMiniGame && (
+              <MineRunner onClose={() => setShowMiniGame(false)} />
             )}
           </AnimatePresence>
 
