@@ -4,56 +4,56 @@
   --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-/* ═══ Apple Intelligence Glow ═══ */
-@property --glow-angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
+/* ═══ Text Shimmer ═══ */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
 }
 
-@keyframes glow-spin {
-  to { --glow-angle: 360deg; }
-}
-
-.apple-glow-border {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  pointer-events: none;
-  border: 2px solid;
-  border-image: conic-gradient(
-    from var(--glow-angle),
-    #ff6b6b, #ff922b, #ffd43b, #51cf66, #339af0, #845ef7, #f06595, #ff6b6b
-  ) 1;
-  animation: glow-spin 8s linear infinite;
-}
-
-.apple-glow-shadow {
-  position: fixed;
-  inset: -4px;
-  z-index: 0;
-  pointer-events: none;
-  border: 6px solid;
-  border-image: conic-gradient(
-    from var(--glow-angle),
-    #ff6b6b, #ff922b, #ffd43b, #51cf66, #339af0, #845ef7, #f06595, #ff6b6b
-  ) 1;
-  animation: glow-spin 8s linear infinite;
-  filter: blur(12px);
-  opacity: 0.4;
+.text-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.8) 0%,
+    rgba(255,255,255,1) 25%,
+    rgba(48,209,88,0.8) 50%,
+    rgba(255,255,255,1) 75%,
+    rgba(255,255,255,0.8) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 4s linear infinite;
 }
 
 /* ═══ Avatar Breathing Glow ═══ */
 @keyframes avatar-breathe {
-  0%, 100% { box-shadow: 0 4px 16px rgba(48,209,88,0.25), 0 0 0 0 rgba(48,209,88,0); }
-  50% { box-shadow: 0 6px 24px rgba(48,209,88,0.4), 0 0 20px 4px rgba(48,209,88,0.15); }
+  0%, 100% { box-shadow: 0 4px 16px rgba(48,209,88,0.25); }
+  50% { box-shadow: 0 6px 28px rgba(48,209,88,0.5), 0 0 20px 4px rgba(48,209,88,0.15); }
+}
+.avatar-glow { animation: avatar-breathe 3s ease-in-out infinite; }
+
+/* ═══ App Icon Press ═══ */
+@keyframes icon-press {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.88); }
+  100% { transform: scale(1); }
 }
 
-.avatar-glow {
-  animation: avatar-breathe 3s ease-in-out infinite;
+/* ═══ iOS Jiggle Mode ═══ */
+@keyframes jiggle {
+  0%, 100% { transform: rotate(-1.5deg); }
+  50% { transform: rotate(1.5deg); }
+}
+.jiggle { animation: jiggle 0.15s ease-in-out infinite; }
+
+/* ═══ Ripple ═══ */
+@keyframes ripple-expand {
+  0% { transform: scale(0); opacity: 0.4; }
+  100% { transform: scale(4); opacity: 0; }
 }
 
-/* ═══ Confetti keyframes ═══ */
+/* ═══ Confetti ═══ */
 @keyframes confetti-fall {
   0% { transform: translateY(0) rotate(0deg); opacity: 1; }
   100% { transform: translateY(120px) rotate(720deg); opacity: 0; }
@@ -65,26 +65,17 @@
   backdrop-filter: blur(40px) saturate(200%);
   -webkit-backdrop-filter: blur(40px) saturate(200%);
   border-top: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow:
-    0 -1px 0 0 rgba(255, 255, 255, 0.04),
-    0 -8px 32px -8px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 -1px 0 0 rgba(255, 255, 255, 0.04), 0 -8px 32px -8px rgba(0, 0, 0, 0.6);
 }
-
 .tab-pill-bg {
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
-    0 2px 12px -2px rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 2px 12px -2px rgba(0, 0, 0, 0.3);
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body, #root {
   width: 100%;
@@ -96,9 +87,7 @@ html, body, #root {
   -moz-osx-font-smoothing: grayscale;
 }
 
-::-webkit-scrollbar {
-  display: none;
-}
+::-webkit-scrollbar { display: none; }
 
 ::selection {
   background: rgba(48, 209, 88, 0.3);
