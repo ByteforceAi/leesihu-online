@@ -42,9 +42,9 @@ export const SITE_CONFIG = {
   ],
 
   meta: {
-    title: "Leesihu Online — 이시후월드",
-    description: "이시후의 개인 포탈. 게임, 음악, 그리고 더 많은 것들.",
-    ogImage: "/og-image.jpg",
+    title: "LEESIHU.ONLINE",
+    description: "이시후의 게임 크리에이터 포탈",
+    ogImage: "/og-image.png",
     url: "https://leesihu.online",
   },
 
