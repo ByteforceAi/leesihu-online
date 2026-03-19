@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, Loader2, Home, Clock, MessageSquare, Music, Play, Pause, ExternalLink } from "lucide-react";
+import { ChevronRight, Loader2, Home, Clock, MessageSquare, Music, Pause } from "lucide-react";
 import BootSequence from "./BootSequence";
 import Guestbook from "./Guestbook";
 import Timeline from "./Timeline";
@@ -182,40 +182,6 @@ export default function HomePage() {
                       })}
                     </div>
 
-                    {/* Section: 시후의 유튜브 */}
-                    <h2 className="text-[22px] font-bold text-white mb-3">시후의 유튜브</h2>
-                    <div
-                      className="rounded-2xl overflow-hidden mb-8"
-                      style={{ background: "rgba(255,255,255,0.08)" }}
-                    >
-                      {SITE_CONFIG.youtube.map((yt, index) => {
-                        const isLast = index === SITE_CONFIG.youtube.length - 1;
-                        return (
-                          <div key={index}>
-                            <a
-                              href={yt.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-3.5 px-4 py-3.5 active:bg-white/5 transition-colors duration-100"
-                            >
-                              <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                                <Play className="w-3.5 h-3.5 text-red-400 ml-0.5" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h3 className="text-[15px] font-medium text-white truncate">{yt.title}</h3>
-                              </div>
-                              <ExternalLink className="w-4 h-4 text-white/20 flex-shrink-0" />
-                            </a>
-                            {!isLast && (
-                              <div className="ml-[52px] mr-4">
-                                <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-
                     {/* Section: 더 보기 */}
                     <h2 className="text-[22px] font-bold text-white mb-3">더 보기</h2>
                     <div
@@ -318,55 +284,29 @@ export default function HomePage() {
               paddingBottom: "env(safe-area-inset-bottom, 0px)",
             }}
           >
-            <div className="max-w-[600px] mx-auto flex items-center h-[50px]">
-              {/* Left tabs */}
-              <div className="flex-1 flex items-center justify-around">
-                {([
-                  { id: "home" as Tab, icon: Home, label: "홈" },
-                  { id: "timeline" as Tab, icon: Clock, label: "타임라인" },
-                  { id: "guestbook" as Tab, icon: MessageSquare, label: "방명록" },
-                ] as const).map((tab) => {
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className="flex flex-col items-center gap-0.5 cursor-pointer px-4 py-1"
-                    >
-                      <tab.icon
-                        className="w-[22px] h-[22px]"
-                        style={{ color: isActive ? "#0A84FF" : "rgba(255,255,255,0.35)" }}
-                      />
-                      <span
-                        className="text-[10px] font-medium"
-                        style={{ color: isActive ? "#0A84FF" : "rgba(255,255,255,0.35)" }}
-                      >
-                        {tab.label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Right: Music button */}
-              {SITE_CONFIG.music.enabled && (
-                <button
-                  onClick={toggleMusic}
-                  className="flex flex-col items-center gap-0.5 cursor-pointer px-4 py-1 mr-2"
-                >
-                  {isPlaying ? (
-                    <Pause className="w-[22px] h-[22px] text-[#30D158]" />
-                  ) : (
-                    <Music className="w-[22px] h-[22px]" style={{ color: "rgba(255,255,255,0.35)" }} />
-                  )}
-                  <span
-                    className="text-[10px] font-medium"
-                    style={{ color: isPlaying ? "#30D158" : "rgba(255,255,255,0.35)" }}
+            <div className="max-w-[600px] mx-auto grid grid-cols-4 h-[50px]">
+              {([
+                { id: "home" as Tab, icon: Home, label: "홈" },
+                { id: "timeline" as Tab, icon: Clock, label: "타임라인" },
+                { id: "guestbook" as Tab, icon: MessageSquare, label: "방명록" },
+                { id: "music" as const, icon: isPlaying ? Pause : Music, label: isPlaying ? "재생 중" : "음악" },
+              ]).map((tab) => {
+                const isMusic = tab.id === "music";
+                const isActive = isMusic ? isPlaying : activeTab === tab.id;
+                const color = isMusic && isPlaying ? "#30D158" : isActive ? "#0A84FF" : "rgba(255,255,255,0.35)";
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => isMusic ? toggleMusic() : setActiveTab(tab.id as Tab)}
+                    className="flex flex-col items-center justify-center gap-0.5 cursor-pointer"
                   >
-                    {isPlaying ? "재생 중" : "음악"}
-                  </span>
-                </button>
-              )}
+                    <tab.icon className="w-[22px] h-[22px]" style={{ color }} />
+                    <span className="text-[10px] font-medium" style={{ color }}>
+                      {tab.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </motion.div>

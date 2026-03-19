@@ -41,11 +41,6 @@ export const SITE_CONFIG = {
     },
   ],
 
-  youtube: [
-    { title: "좋아하는 영상 1", url: "https://youtube.com" },
-    { title: "좋아하는 영상 2", url: "https://youtube.com" },
-  ],
-
   meta: {
     title: "Leesihu Online — 이시후월드",
     description: "이시후의 개인 포탈. 게임, 음악, 그리고 더 많은 것들.",
