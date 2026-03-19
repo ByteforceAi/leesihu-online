@@ -195,8 +195,8 @@ export default function FriendChatFlow({ onClose }: Props) {
 
       // Save to Supabase
       try {
-        const { supabase } = await import("../lib/supabase");
-        await supabase.from("guestbook").insert({
+        const { supabase: sb } = await import("../lib/supabase");
+        await sb.from("guestbook").insert({
           name: `🤝 ${name}`,
           message: `친구추가 — ${value}`,
           emoji: "🤝",
