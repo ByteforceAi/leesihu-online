@@ -336,10 +336,10 @@ export default function FriendChatFlow({ onClose }: Props) {
           <motion.button
             whileTap={{ scale: 0.96 }}
             onClick={() => handleChoice(false)}
-            className="w-full py-4 rounded-2xl text-[16px] font-semibold cursor-pointer border-2 border-white/15 active:bg-white/5"
-            style={{ background: "transparent", color: "rgba(255,255,255,0.6)" }}
+            className="w-full py-4 rounded-2xl text-[16px] font-medium cursor-pointer active:bg-white/10"
+            style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}
           >
-            다음에요
+            다음에 할게요
           </motion.button>
         </motion.div>
       )}
@@ -355,8 +355,23 @@ export default function FriendChatFlow({ onClose }: Props) {
             <input
               ref={inputRef}
               type={step === 2 ? "tel" : "text"}
+              inputMode={step === 2 ? "numeric" : "text"}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                if (step === 2) {
+                  // Auto-format phone: 010-0000-0000
+                  const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
+                  let formatted = digits;
+                  if (digits.length > 3 && digits.length <= 7) {
+                    formatted = `${digits.slice(0, 3)}-${digits.slice(3)}`;
+                  } else if (digits.length > 7) {
+                    formatted = `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+                  }
+                  setInput(formatted);
+                } else {
+                  setInput(e.target.value);
+                }
+              }}
               onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
               placeholder={step === 1 ? "이름을 입력해줘" : "010-0000-0000"}
               maxLength={step === 1 ? 20 : 13}

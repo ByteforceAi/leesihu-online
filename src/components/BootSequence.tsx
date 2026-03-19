@@ -106,7 +106,7 @@ export default function BootSequence({ onComplete }: Props) {
       setProgress((p) => {
         if (p >= 100) return 100;
         // Fast start, smooth finish — reaches ~95% by 3.5s, 100% forced at portal
-        const speed = p < 60 ? 1.5 : p < 85 ? 0.8 : 0.4;
+        const speed = p < 50 ? 2.0 : p < 80 ? 1.2 : 0.6;
         return Math.min(99, p + speed);
       });
     }, 30);
