@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
-import { motion } from "framer-motion";
-import { ChevronRight, Gamepad2, Cpu, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronRight, Gamepad2, Cpu, Loader2, Home, Clock, MessageSquare } from "lucide-react";
 import BootSequence from "./BootSequence";
 import MusicPlayer from "./MusicPlayer";
 import Guestbook from "./Guestbook";
@@ -8,34 +8,17 @@ import Timeline from "./Timeline";
 import VisitorCount from "./VisitorCount";
 import { SITE_CONFIG } from "../config/site";
 
+type Tab = "home" | "timeline" | "guestbook";
+
 const serverIcons: Record<string, React.ReactNode> = {
   game: <Gamepad2 className="w-5 h-5" />,
   simulator: <Cpu className="w-5 h-5" />,
 };
 
-// iOS card style
-const glassCard = {
-  background: "rgba(255,255,255,0.12)",
-  backdropFilter: "blur(60px) saturate(180%)",
-  WebkitBackdropFilter: "blur(60px) saturate(180%)",
-  border: "1px solid rgba(255,255,255,0.18)",
-  borderRadius: "20px",
-  boxShadow: "0 2px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.08)",
-} as const;
-
-// iOS section card (grouped items, like Settings)
-const sectionCard = {
-  background: "rgba(255,255,255,0.10)",
-  backdropFilter: "blur(60px) saturate(180%)",
-  WebkitBackdropFilter: "blur(60px) saturate(180%)",
-  border: "1px solid rgba(255,255,255,0.14)",
-  borderRadius: "16px",
-  overflow: "hidden" as const,
-} as const;
-
 export default function HomePage() {
   const [booting, setBooting] = useState(true);
   const [ready, setReady] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>("home");
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const handleBootComplete = useCallback(() => {
@@ -53,191 +36,272 @@ export default function HomePage() {
   };
 
   return (
-    <div className="relative w-full h-full overflow-hidden select-none">
-      {/* ─── Background: heavily blurred wallpaper ─── */}
-      <div className="fixed inset-0 z-0">
-        <img
-          src="/assets/bg.png"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{
-            filter: "brightness(0.5) saturate(1.2) blur(20px)",
-            transform: "scale(1.1)",
-          }}
-          onError={(e) => {
-            (e.target as HTMLImageElement).style.display = "none";
-          }}
-        />
-        {/* Dark overlay for readability */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: "linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.4) 100%)",
-          }}
-        />
-      </div>
-
-      {/* ─── Scrollable Content ─── */}
+    <div className="relative w-full h-full overflow-hidden select-none bg-black">
       {ready && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="relative z-10 w-full h-full overflow-y-auto flex justify-center"
-          style={{ WebkitOverflowScrolling: "touch" }}
+          transition={{ duration: 0.4 }}
+          className="w-full h-full flex flex-col"
         >
-          <div className="w-full max-w-[480px] px-5 pt-12 pb-28 md:pt-16">
+          {/* ══════════════════════════════════════
+               iOS CONTENT AREA (scrollable)
+             ══════════════════════════════════════ */}
+          <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+            <div className="w-full max-w-[600px] mx-auto">
 
-            {/* ═══════ Profile Card ═══════ */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
-              className="p-6 mb-5"
-              style={glassCard}
-            >
-              <div className="flex flex-col items-center">
-                {/* Avatar */}
-                <div
-                  className="w-[68px] h-[68px] rounded-[18px] flex items-center justify-center mb-3"
-                  style={{
-                    background: "linear-gradient(135deg, #30D158 0%, #0EA5E9 100%)",
-                    boxShadow: "0 6px 20px rgba(48,209,88,0.3)",
-                  }}
-                >
-                  <span className="text-[26px] font-bold text-white">L</span>
-                </div>
-
-                <h1 className="text-[20px] font-bold tracking-[0.5px] text-white mb-0.5">
-                  LEESIHU<span className="text-white/30">.ONLINE</span>
-                </h1>
-                <p className="text-[13px] text-white/40 mb-3">
-                  Game Creator
-                </p>
-
-                <VisitorCount />
-              </div>
-            </motion.div>
-
-            {/* ═══════ Play Section ═══════ */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.5 }}
-              className="mb-5"
-            >
-              <p className="text-[13px] font-medium text-white/40 uppercase tracking-wider mb-2 px-2">
-                플레이
-              </p>
-              <div style={sectionCard}>
-                {SITE_CONFIG.servers.map((server, index) => {
-                  const isLoading = loadingId === server.id;
-                  const isLast = index === SITE_CONFIG.servers.length - 1;
-                  return (
-                    <button
-                      key={server.id}
-                      onClick={() => handleCardTap(server)}
-                      disabled={server.disabled || isLoading}
-                      className="w-full text-left cursor-pointer active:bg-white/8 transition-colors duration-100"
-                    >
-                      <div className="flex items-center gap-3 px-4 py-3">
-                        {/* Icon */}
-                        <div
-                          className="w-10 h-10 rounded-[11px] flex items-center justify-center flex-shrink-0"
-                          style={{
-                            background: server.gradient,
-                            boxShadow: `0 3px 10px ${server.id === "game" ? "rgba(48,209,88,0.3)" : "rgba(14,165,233,0.3)"}`,
-                          }}
-                        >
-                          <div className="text-white">{serverIcons[server.id]}</div>
-                        </div>
-
-                        {/* Text */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-[15px] font-semibold text-white">{server.name}</h3>
-                            <div className="flex items-center gap-1">
-                              <div className="w-[5px] h-[5px] rounded-full bg-[#30D158]" />
-                              <span className="text-[10px] text-[#30D158] font-medium">ONLINE</span>
-                            </div>
+              <AnimatePresence mode="wait">
+                {activeTab === "home" && (
+                  <motion.div
+                    key="home"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {/* ─── Hero Banner (Apple Music style) ─── */}
+                    <div className="relative w-full aspect-[16/10] overflow-hidden">
+                      <img
+                        src="/assets/bg.png"
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover"
+                        style={{ filter: "brightness(0.7) saturate(1.2)" }}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                      {/* Gradient fade to black at bottom */}
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          background: "linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.7) 75%, #000 100%)",
+                        }}
+                      />
+                      {/* Profile overlay */}
+                      <div className="absolute bottom-0 left-0 right-0 px-5 pb-5">
+                        <div className="flex items-end gap-4">
+                          <div
+                            className="w-[64px] h-[64px] rounded-[16px] flex items-center justify-center flex-shrink-0"
+                            style={{
+                              background: "linear-gradient(135deg, #30D158 0%, #0EA5E9 100%)",
+                              boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+                            }}
+                          >
+                            <span className="text-[24px] font-bold text-white">L</span>
                           </div>
-                          <p className="text-[12px] text-white/35 truncate">{server.description}</p>
+                          <div className="flex-1 min-w-0 pb-0.5">
+                            <h1 className="text-[24px] font-bold text-white leading-tight">
+                              LEESIHU<span className="text-white/30">.ONLINE</span>
+                            </h1>
+                            <p className="text-[13px] text-white/50">Game Creator</p>
+                          </div>
                         </div>
-
-                        {/* Arrow or loader */}
-                        <div className="flex-shrink-0">
-                          {isLoading ? (
-                            <Loader2 className="w-[18px] h-[18px] text-white/30 animate-spin" />
-                          ) : (
-                            <ChevronRight className="w-[18px] h-[18px] text-white/20" />
-                          )}
+                        <div className="mt-3">
+                          <VisitorCount />
                         </div>
                       </div>
+                    </div>
 
-                      {/* Loading bar */}
-                      {isLoading && (
-                        <div className="px-4 pb-3">
-                          <div className="h-[2px] rounded-full overflow-hidden bg-white/5">
-                            <motion.div
-                              initial={{ width: "0%" }}
-                              animate={{ width: "100%" }}
-                              transition={{ duration: 0.7, ease: "easeInOut" }}
-                              className="h-full rounded-full"
-                              style={{ background: server.gradient }}
-                            />
+                    {/* ─── Content on solid black ─── */}
+                    <div className="px-5 pt-6 pb-28">
+                      {/* Section: 플레이 */}
+                      <h2 className="text-[22px] font-bold text-white mb-3">플레이</h2>
+
+                      <div
+                        className="rounded-2xl overflow-hidden mb-8"
+                        style={{ background: "rgba(255,255,255,0.08)" }}
+                      >
+                        {SITE_CONFIG.servers.map((server, index) => {
+                          const isLoading = loadingId === server.id;
+                          const isLast = index === SITE_CONFIG.servers.length - 1;
+                          return (
+                            <div key={server.id}>
+                              <button
+                                onClick={() => handleCardTap(server)}
+                                disabled={server.disabled || isLoading}
+                                className="w-full text-left cursor-pointer active:bg-white/5 transition-colors duration-100"
+                              >
+                                <div className="flex items-center gap-3.5 px-4 py-3.5">
+                                  <div
+                                    className="w-11 h-11 rounded-[12px] flex items-center justify-center flex-shrink-0"
+                                    style={{
+                                      background: server.gradient,
+                                      boxShadow: `0 2px 8px ${server.id === "game" ? "rgba(48,209,88,0.25)" : "rgba(14,165,233,0.25)"}`,
+                                    }}
+                                  >
+                                    <div className="text-white">{serverIcons[server.id]}</div>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <h3 className="text-[16px] font-semibold text-white">{server.name}</h3>
+                                      <div className="flex items-center gap-1">
+                                        <div className="w-[5px] h-[5px] rounded-full bg-[#30D158]" />
+                                        <span className="text-[10px] text-[#30D158] font-medium">ONLINE</span>
+                                      </div>
+                                    </div>
+                                    <p className="text-[13px] text-white/40">{server.description}</p>
+                                  </div>
+                                  <div className="flex-shrink-0">
+                                    {isLoading ? (
+                                      <Loader2 className="w-[18px] h-[18px] text-white/30 animate-spin" />
+                                    ) : (
+                                      <ChevronRight className="w-[18px] h-[18px] text-white/20" />
+                                    )}
+                                  </div>
+                                </div>
+                                {isLoading && (
+                                  <div className="px-4 pb-3">
+                                    <div className="h-[2px] rounded-full overflow-hidden bg-white/5">
+                                      <motion.div
+                                        initial={{ width: "0%" }}
+                                        animate={{ width: "100%" }}
+                                        transition={{ duration: 0.7, ease: "easeInOut" }}
+                                        className="h-full rounded-full"
+                                        style={{ background: server.gradient }}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </button>
+                              {!isLast && (
+                                <div className="ml-[72px]">
+                                  <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Quick links to other tabs */}
+                      <h2 className="text-[22px] font-bold text-white mb-3">더 보기</h2>
+                      <div
+                        className="rounded-2xl overflow-hidden"
+                        style={{ background: "rgba(255,255,255,0.08)" }}
+                      >
+                        <button
+                          onClick={() => setActiveTab("timeline")}
+                          className="w-full text-left cursor-pointer active:bg-white/5 transition-colors duration-100"
+                        >
+                          <div className="flex items-center gap-3.5 px-4 py-3.5">
+                            <div className="w-11 h-11 rounded-[12px] flex items-center justify-center flex-shrink-0 bg-orange-500/20">
+                              <Clock className="w-5 h-5 text-orange-400" />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="text-[16px] font-semibold text-white">타임라인</h3>
+                              <p className="text-[13px] text-white/40">나의 성장 기록</p>
+                            </div>
+                            <ChevronRight className="w-[18px] h-[18px] text-white/20" />
                           </div>
+                        </button>
+                        <div className="ml-[72px]">
+                          <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
                         </div>
-                      )}
+                        <button
+                          onClick={() => setActiveTab("guestbook")}
+                          className="w-full text-left cursor-pointer active:bg-white/5 transition-colors duration-100"
+                        >
+                          <div className="flex items-center gap-3.5 px-4 py-3.5">
+                            <div className="w-11 h-11 rounded-[12px] flex items-center justify-center flex-shrink-0 bg-purple-500/20">
+                              <MessageSquare className="w-5 h-5 text-purple-400" />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="text-[16px] font-semibold text-white">방명록</h3>
+                              <p className="text-[13px] text-white/40">메시지를 남겨보세요</p>
+                            </div>
+                            <ChevronRight className="w-[18px] h-[18px] text-white/20" />
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
 
-                      {/* iOS divider between items */}
-                      {!isLast && (
-                        <div className="ml-[68px] mr-4">
-                          <div className="h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
-                        </div>
-                      )}
+                {activeTab === "timeline" && (
+                  <motion.div
+                    key="timeline"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.25 }}
+                    className="px-5 pt-4 pb-28"
+                  >
+                    {/* iOS Nav bar style */}
+                    <button
+                      onClick={() => setActiveTab("home")}
+                      className="flex items-center gap-1 text-[#0A84FF] text-[15px] mb-2 cursor-pointer"
+                    >
+                      <ChevronRight className="w-4 h-4 rotate-180" />
+                      <span>홈</span>
                     </button>
-                  );
-                })}
-              </div>
-            </motion.div>
+                    <h1 className="text-[34px] font-bold text-white mb-6">타임라인</h1>
+                    <Timeline />
+                  </motion.div>
+                )}
 
-            {/* ═══════ Timeline Section ═══════ */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-30px" }}
-              transition={{ duration: 0.5 }}
-              className="mb-5"
-            >
-              <p className="text-[13px] font-medium text-white/40 uppercase tracking-wider mb-2 px-2">
-                타임라인
-              </p>
-              <div className="p-4" style={sectionCard}>
-                <Timeline />
-              </div>
-            </motion.div>
+                {activeTab === "guestbook" && (
+                  <motion.div
+                    key="guestbook"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.25 }}
+                    className="px-5 pt-4 pb-28"
+                  >
+                    <button
+                      onClick={() => setActiveTab("home")}
+                      className="flex items-center gap-1 text-[#0A84FF] text-[15px] mb-2 cursor-pointer"
+                    >
+                      <ChevronRight className="w-4 h-4 rotate-180" />
+                      <span>홈</span>
+                    </button>
+                    <h1 className="text-[34px] font-bold text-white mb-6">방명록</h1>
+                    <Guestbook />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
 
-            {/* ═══════ Guestbook Section ═══════ */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-30px" }}
-              transition={{ duration: 0.5 }}
-              className="mb-5"
-            >
-              <p className="text-[13px] font-medium text-white/40 uppercase tracking-wider mb-2 px-2">
-                방명록
-              </p>
-              <div className="p-4" style={sectionCard}>
-                <Guestbook />
-              </div>
-            </motion.div>
-
-            {/* ═══════ Footer ═══════ */}
-            <div className="text-center pt-4 pb-8">
-              <p className="text-[11px] text-white/15">
-                leesihu.online — 이시후월드
-              </p>
+          {/* ══════════════════════════════════════
+               iOS TAB BAR (bottom)
+             ══════════════════════════════════════ */}
+          <div
+            className="flex-shrink-0 w-full"
+            style={{
+              background: "rgba(20,20,20,0.85)",
+              backdropFilter: "blur(30px) saturate(180%)",
+              WebkitBackdropFilter: "blur(30px) saturate(180%)",
+              borderTop: "1px solid rgba(255,255,255,0.08)",
+              paddingBottom: "env(safe-area-inset-bottom, 0px)",
+            }}
+          >
+            <div className="max-w-[600px] mx-auto flex items-center justify-around h-[50px]">
+              {[
+                { id: "home" as Tab, icon: Home, label: "홈" },
+                { id: "timeline" as Tab, icon: Clock, label: "타임라인" },
+                { id: "guestbook" as Tab, icon: MessageSquare, label: "방명록" },
+              ].map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className="flex flex-col items-center gap-0.5 cursor-pointer px-4 py-1"
+                  >
+                    <tab.icon
+                      className="w-[22px] h-[22px]"
+                      style={{ color: isActive ? "#0A84FF" : "rgba(255,255,255,0.35)" }}
+                    />
+                    <span
+                      className="text-[10px] font-medium"
+                      style={{ color: isActive ? "#0A84FF" : "rgba(255,255,255,0.35)" }}
+                    >
+                      {tab.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </motion.div>
