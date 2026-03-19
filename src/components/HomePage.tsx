@@ -7,7 +7,10 @@ import Timeline from "./Timeline";
 import VisitorCount from "./VisitorCount";
 import AdminNotice from "./AdminNotice";
 import ChatBot from "./ChatBot";
+import DynamicIsland from "./DynamicIsland";
+import MinecraftParticles from "./MinecraftParticles";
 import { SITE_CONFIG } from "../config/site";
+import { playTabSwitch, playButtonClick, playFriendAdd } from "../lib/sounds";
 
 type Tab = "home" | "timeline" | "guestbook";
 
@@ -19,6 +22,7 @@ function AppIcon({
   onClick,
   badge,
   delay = 0,
+  jiggling = false,
 }: {
   icon: string;
   label: string;
@@ -26,17 +30,34 @@ function AppIcon({
   onClick: () => void;
   badge?: string;
   delay?: number;
+  jiggling?: boolean;
 }) {
   const [pressed, setPressed] = useState(false);
   const [ripple, setRipple] = useState(false);
+  const [tiltX, setTiltX] = useState(0);
+  const [tiltY, setTiltY] = useState(0);
+  const iconRef = useRef<HTMLDivElement>(null);
 
   const handleTap = () => {
     setPressed(true);
     setRipple(true);
+    playButtonClick();
     setTimeout(() => setPressed(false), 200);
     setTimeout(() => setRipple(false), 600);
     setTimeout(onClick, 150);
   };
+
+  // 3D tilt on mouse move (desktop)
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const el = iconRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    setTiltX(y * -15);
+    setTiltY(x * 15);
+  };
+  const handleMouseLeave = () => { setTiltX(0); setTiltY(0); };
 
   return (
     <motion.button
@@ -44,14 +65,19 @@ function AppIcon({
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ delay, type: "spring", stiffness: 300, damping: 20 }}
       onClick={handleTap}
-      className="flex flex-col items-center gap-1.5 cursor-pointer relative"
+      className={`flex flex-col items-center gap-1.5 cursor-pointer relative ${jiggling ? "jiggle" : ""}`}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
     >
-      {/* Icon square */}
+      {/* Icon square with 3D tilt */}
       <motion.div
+        ref={iconRef}
         className="relative w-[60px] h-[60px] rounded-[16px] flex items-center justify-center overflow-hidden"
         style={{
           background: gradient,
           boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+          transform: `perspective(200px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`,
+          transition: "transform 0.15s ease-out",
         }}
         animate={{ scale: pressed ? 0.85 : 1 }}
         transition={{ type: "spring", stiffness: 500, damping: 20 }}
@@ -93,6 +119,9 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [showFriendAdd, setShowFriendAdd] = useState(false);
+  const [jiggleMode, setJiggleMode] = useState(false);
+  const [visitorCount] = useState(1);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Music
   const [isPlaying, setIsPlaying] = useState(false);
@@ -140,6 +169,15 @@ export default function HomePage() {
         <audio ref={audioRef} src={SITE_CONFIG.music.src} preload="metadata" loop />
       )}
 
+      {/* Dynamic Island */}
+      {ready && !booting && (
+        <DynamicIsland
+          visitorCount={visitorCount}
+          isPlaying={isPlaying}
+          songTitle={SITE_CONFIG.music.title}
+        />
+      )}
+
       {ready && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -164,8 +202,9 @@ export default function HomePage() {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {/* Parallax Hero */}
+                  {/* Parallax Hero with Minecraft particles */}
                   <div className="relative w-full aspect-[16/9] max-h-[400px] overflow-hidden">
+                    <MinecraftParticles />
                     <motion.img
                       src="/assets/bg.png"
                       alt=""
@@ -213,7 +252,32 @@ export default function HomePage() {
                     <AdminNotice />
 
                     {/* ─── App Icon Grid (iOS Home Screen) ─── */}
-                    <div className="grid grid-cols-4 gap-y-5 gap-x-2 justify-items-center mb-8 mt-2">
+                    {/* Long press to jiggle */}
+                    {jiggleMode && (
+                      <motion.button
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        onClick={() => setJiggleMode(false)}
+                        className="w-full text-center text-[12px] text-[#0A84FF] mb-2 cursor-pointer"
+                      >
+                        완료
+                      </motion.button>
+                    )}
+                    <div
+                      className="grid grid-cols-4 gap-y-5 gap-x-2 justify-items-center mb-8 mt-2"
+                      onTouchStart={() => {
+                        longPressTimer.current = setTimeout(() => setJiggleMode(true), 600);
+                      }}
+                      onTouchEnd={() => {
+                        if (longPressTimer.current) clearTimeout(longPressTimer.current);
+                      }}
+                      onMouseDown={() => {
+                        longPressTimer.current = setTimeout(() => setJiggleMode(true), 600);
+                      }}
+                      onMouseUp={() => {
+                        if (longPressTimer.current) clearTimeout(longPressTimer.current);
+                      }}
+                    >
                       {SITE_CONFIG.servers.map((server, i) => (
                         <AppIcon
                           key={server.id}
@@ -222,6 +286,7 @@ export default function HomePage() {
                           gradient={server.gradient}
                           onClick={() => handleServerTap(server)}
                           delay={0.1 + i * 0.08}
+                          jiggling={jiggleMode}
                         />
                       ))}
                       <AppIcon
@@ -230,6 +295,7 @@ export default function HomePage() {
                         gradient="linear-gradient(135deg, #845ef7, #6366F1)"
                         onClick={() => setActiveTab("guestbook")}
                         delay={0.26}
+                        jiggling={jiggleMode}
                       />
                       <AppIcon
                         icon="📅"
@@ -237,6 +303,7 @@ export default function HomePage() {
                         gradient="linear-gradient(135deg, #ff922b, #f06595)"
                         onClick={() => setActiveTab("timeline")}
                         delay={0.34}
+                        jiggling={jiggleMode}
                       />
                       <AppIcon
                         icon="🤝"
@@ -245,6 +312,7 @@ export default function HomePage() {
                         onClick={() => setShowFriendAdd(true)}
                         badge="N"
                         delay={0.42}
+                        jiggling={jiggleMode}
                       />
                       <AppIcon
                         icon={isPlaying ? "⏸️" : "🎵"}
@@ -254,6 +322,7 @@ export default function HomePage() {
                           : "linear-gradient(135deg, #339af0, #228be6)"}
                         onClick={toggleMusic}
                         delay={0.5}
+                        jiggling={jiggleMode}
                       />
                     </div>
 
@@ -362,9 +431,9 @@ export default function HomePage() {
           {/* Tab Bar */}
           <PremiumTabBar
             activeTab={activeTab}
-            onTabChange={setActiveTab}
+            onTabChange={(tab) => { playTabSwitch(); setActiveTab(tab); }}
             isPlaying={isPlaying}
-            onToggleMusic={toggleMusic}
+            onToggleMusic={() => { playButtonClick(); toggleMusic(); }}
           />
         </motion.div>
       )}
@@ -392,6 +461,7 @@ function FriendAddModal({ onClose }: { onClose: () => void }) {
     });
     setSending(false);
     setSuccess(true);
+    playFriendAdd();
     setTimeout(onClose, 2500);
   };
 
