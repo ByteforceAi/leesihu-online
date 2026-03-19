@@ -44,7 +44,7 @@ export default function HomePage() {
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
           style={{
-            filter: "brightness(0.35) saturate(1.4)",
+            filter: "brightness(0.4) saturate(1.3)",
             transform: "scale(1.02)",
           }}
           onError={(e) => {
@@ -74,10 +74,10 @@ export default function HomePage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6 }}
-          className="relative z-10 w-full h-full overflow-y-auto"
+          className="relative z-10 w-full h-full overflow-y-auto flex justify-center"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
-          <div className="w-full max-w-[560px] mx-auto px-6 pt-14 pb-28 md:pt-20">
+          <div className="w-full max-w-[560px] px-6 pt-14 pb-28 md:pt-20">
 
             {/* ─── Profile Header ─── */}
             <motion.div
