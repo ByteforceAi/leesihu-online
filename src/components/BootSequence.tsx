@@ -124,6 +124,25 @@ export default function BootSequence({ onComplete }: Props) {
     };
   }, []);
 
+  // Touch during loading — burst + progress jump
+  const [bursts, setBursts] = useState<{ id: number; x: number; y: number }[]>([]);
+
+  const handleLoadingTouch = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (phase !== "matrix") return;
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+
+    // Add burst
+    setBursts((prev) => [...prev, { id: Date.now(), x, y }]);
+    setTimeout(() => setBursts((prev) => prev.slice(1)), 800);
+
+    // Fake progress jump
+    setProgress((p) => Math.min(100, p + 3));
+  }, [phase]);
+
   // Handle enter
   const handleEnter = useCallback(() => {
     if (phase !== "ready") return;
@@ -141,8 +160,8 @@ export default function BootSequence({ onComplete }: Props) {
     <div
       className="fixed inset-0 z-[100] overflow-hidden cursor-pointer"
       style={{ background: "#000" }}
-      onClick={handleEnter}
-      onTouchStart={handleEnter}
+      onClick={(e) => { handleLoadingTouch(e); handleEnter(); }}
+      onTouchStart={(e) => { handleLoadingTouch(e); handleEnter(); }}
     >
       {/* Matrix rain canvas */}
       <canvas
@@ -161,6 +180,34 @@ export default function BootSequence({ onComplete }: Props) {
           background: "radial-gradient(ellipse at center, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.8) 100%)",
         }}
       />
+
+      {/* Touch burst particles */}
+      {bursts.map((b) => (
+        <div key={b.id} className="absolute pointer-events-none" style={{ left: b.x, top: b.y, zIndex: 20 }}>
+          {Array.from({ length: 6 }).map((_, i) => {
+            const angle = (i / 6) * Math.PI * 2;
+            const dist = 40 + Math.random() * 30;
+            return (
+              <motion.div
+                key={i}
+                className="absolute w-1.5 h-1.5 rounded-full"
+                style={{
+                  background: i % 2 === 0 ? "#30D158" : "#0EA5E9",
+                  boxShadow: `0 0 6px ${i % 2 === 0 ? "#30D158" : "#0EA5E9"}`,
+                }}
+                initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                animate={{
+                  x: Math.cos(angle) * dist,
+                  y: Math.sin(angle) * dist,
+                  opacity: 0,
+                  scale: 0,
+                }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+              />
+            );
+          })}
+        </div>
+      ))}
 
       {/* Portal glow (Phase 2+) */}
       {(phase === "portal" || phase === "ready" || phase === "enter") && (
@@ -204,29 +251,92 @@ export default function BootSequence({ onComplete }: Props) {
           </motion.div>
         )}
 
-        {/* Terminal messages */}
+        {/* Progress Ring + Status Checklist */}
         {phase === "matrix" && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="w-[300px] max-w-[85vw] space-y-1 mb-8"
+            className="flex flex-col items-center gap-6 mb-6"
           >
-            {messages.map((msg, i) => (
-              <motion.p
-                key={i}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3 }}
-                className="text-[12px] font-mono"
-                style={{
-                  color: msg.includes("✓") ? "#30D158"
-                    : msg.includes("완료") ? "#0EA5E9"
-                    : "rgba(255,255,255,0.5)",
-                }}
-              >
-                {msg}
-              </motion.p>
-            ))}
+            {/* SVG Progress Ring */}
+            <div className="relative w-20 h-20">
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 80 80">
+                {/* Background ring */}
+                <circle
+                  cx="40" cy="40" r="35"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.08)"
+                  strokeWidth="4"
+                />
+                {/* Progress ring */}
+                <circle
+                  cx="40" cy="40" r="35"
+                  fill="none"
+                  stroke="url(#progressGrad)"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 35}`}
+                  strokeDashoffset={`${2 * Math.PI * 35 * (1 - progress / 100)}`}
+                  style={{ transition: "stroke-dashoffset 0.15s ease-out" }}
+                />
+                <defs>
+                  <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#30D158" />
+                    <stop offset="100%" stopColor="#0EA5E9" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              {/* Center number */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-[18px] font-bold text-white/80 font-mono">
+                  {Math.round(progress)}
+                </span>
+              </div>
+            </div>
+
+            {/* Status Checklist */}
+            <div className="w-[260px] max-w-[85vw] space-y-2">
+              {BOOT_MESSAGES.map((msg, i) => {
+                const isActive = i < messages.length;
+                const isDone = i < messages.length - 1 || (i === messages.length - 1 && msg.sound);
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: isActive ? 1 : 0.2, x: isActive ? 0 : -8 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex items-center gap-2.5"
+                  >
+                    {/* Status icon */}
+                    <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                      {isDone ? (
+                        <motion.span
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                          className="text-[14px] text-[#30D158]"
+                        >
+                          ✓
+                        </motion.span>
+                      ) : isActive ? (
+                        <div className="w-3 h-3 rounded-full border-2 border-[#0EA5E9] border-t-transparent animate-spin" />
+                      ) : (
+                        <div className="w-2 h-2 rounded-full bg-white/15" />
+                      )}
+                    </div>
+                    {/* Text */}
+                    <span
+                      className="text-[13px] font-mono"
+                      style={{
+                        color: isDone ? "#30D158" : isActive ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)",
+                      }}
+                    >
+                      {msg.text.replace("> ", "").replace(" ✓", "")}
+                    </span>
+                  </motion.div>
+                );
+              })}
+            </div>
           </motion.div>
         )}
 
