@@ -40,7 +40,7 @@ export default function HomePage() {
           src="/assets/bg.png"
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
-          style={{ filter: "brightness(0.3) blur(2px) saturate(1.2)" }}
+          style={{ filter: "brightness(0.15) blur(8px) saturate(1.3) scale(1.05)", transform: "scale(1.05)" }}
           onError={(e) => {
             (e.target as HTMLImageElement).style.display = "none";
           }}
@@ -48,7 +48,7 @@ export default function HomePage() {
         <div
           className="absolute inset-0"
           style={{
-            background: "linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 30%, rgba(0,0,0,0.6) 100%)",
+            background: "linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.5) 30%, rgba(0,0,0,0.8) 100%)",
           }}
         />
       </div>
@@ -59,7 +59,7 @@ export default function HomePage() {
           className="relative z-10 w-full h-full overflow-y-auto"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
-          <div className="w-full max-w-[480px] mx-auto px-5 pt-16 pb-24">
+          <div className="w-full max-w-[520px] mx-auto px-6 pt-16 pb-24">
             {/* Header — profile area */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
