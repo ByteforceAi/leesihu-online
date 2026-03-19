@@ -1,219 +1,170 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { playFriendAdd } from "../lib/sounds";
-
-interface Message {
-  id: number;
-  role: "bot" | "user";
-  text: string;
-  typewriter?: boolean;
-}
+import { playFriendAdd, playButtonClick } from "../lib/sounds";
 
 interface Props {
   onClose: () => void;
 }
 
-type NpcEmotion = "default" | "thinking" | "happy" | "heart";
+type NpcEmotion = "default" | "happy" | "heart";
 
 const KAOMOJI: Record<NpcEmotion, string> = {
   default: "(◕‿◕)",
-  thinking: "(◠_◠)",
   happy: "(≧◡≦)",
   heart: "(♡ᴗ♡)",
 };
 
-const GLOW_COLOR: Record<NpcEmotion, string> = {
-  default: "rgba(48,209,88,0.5)",
-  thinking: "rgba(10,132,255,0.5)",
-  happy: "rgba(255,214,10,0.5)",
-  heart: "rgba(255,55,95,0.5)",
+const ACCENT: Record<NpcEmotion, string> = {
+  default: "#30D158",
+  happy: "#FFD60A",
+  heart: "#FF375F",
 };
 
-const BG_GRADIENT: Record<NpcEmotion, string> = {
-  default: "radial-gradient(ellipse at 50% 30%, rgba(48,209,88,0.05) 0%, #000 70%)",
-  thinking: "radial-gradient(ellipse at 50% 30%, rgba(10,132,255,0.06) 0%, #000 70%)",
-  happy: "radial-gradient(ellipse at 50% 30%, rgba(255,214,10,0.05) 0%, #000 70%)",
-  heart: "radial-gradient(ellipse at 50% 30%, rgba(255,55,95,0.06) 0%, #000 70%)",
+const GLOW: Record<NpcEmotion, string> = {
+  default: "rgba(48,209,88,0.4)",
+  happy: "rgba(255,214,10,0.4)",
+  heart: "rgba(255,55,95,0.4)",
 };
 
-/* ── TypewriterText ─────────────────────────────────────── */
-function TypewriterText({ text, onDone }: { text: string; onDone?: () => void }) {
-  const [displayed, setDisplayed] = useState("");
-  const idx = useRef(0);
+/* ── Card transition variants ──────────────────── */
+const cardVariants = {
+  enter: { opacity: 0, y: 40, scale: 0.96, filter: "blur(8px)" },
+  center: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" },
+  exit: { opacity: 0, y: -30, scale: 1.02, filter: "blur(4px)" },
+};
 
-  useEffect(() => {
-    idx.current = 0;
-    setDisplayed("");
-
-    const timer = setInterval(() => {
-      idx.current++;
-      if (idx.current >= text.length) {
-        setDisplayed(text);
-        clearInterval(timer);
-        onDone?.();
-      } else {
-        setDisplayed(text.slice(0, idx.current));
-      }
-    }, 15);
-
-    return () => clearInterval(timer);
-  }, [text, onDone]);
-
-  return <>{displayed}</>;
+/* ── NPC Face ──────────────────────────────────── */
+function NpcFace({ emotion, size = 80 }: { emotion: NpcEmotion; size?: number }) {
+  const color = ACCENT[emotion];
+  return (
+    <motion.div
+      key={emotion}
+      initial={{ scale: 0.8, rotate: -5 }}
+      animate={{ scale: 1, rotate: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 15 }}
+      className="rounded-full bg-gradient-to-br from-[#30D158] to-[#0EA5E9] flex items-center justify-center relative"
+      style={{
+        width: size,
+        height: size,
+        boxShadow: `0 0 ${size * 0.3}px ${size * 0.08}px ${GLOW[emotion]}, 0 0 ${size * 0.7}px ${size * 0.15}px ${GLOW[emotion]}40`,
+      }}
+    >
+      {/* Neon breathing ring */}
+      <motion.div
+        className="absolute rounded-full"
+        style={{
+          inset: -3,
+          border: `2px solid ${color}50`,
+        }}
+        animate={{
+          opacity: [0.3, 0.8, 0.3],
+          scale: [1, 1.05, 1],
+        }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <span
+        className="leading-none select-none"
+        style={{ fontSize: size * 0.28 }}
+      >
+        {KAOMOJI[emotion]}
+      </span>
+    </motion.div>
+  );
 }
 
-/* ── NPC Avatar (large, centered) ──────────────────────── */
-function NpcAvatar({ emotion }: { emotion: NpcEmotion }) {
+/* ── Neon Pulse Dots (decorative) ──────────────── */
+function NeonDots({ color }: { color: string }) {
   return (
-    <div className="flex flex-col items-center gap-2">
-      <motion.div
-        key={emotion}
-        initial={{ scale: 0.7 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 400, damping: 12 }}
-        className="w-24 h-24 rounded-full bg-gradient-to-br from-[#30D158] to-[#0EA5E9] flex items-center justify-center relative"
-        style={{
-          boxShadow: `0 0 24px 6px ${GLOW_COLOR[emotion]}, 0 0 60px 12px ${GLOW_COLOR[emotion]}`,
-        }}
-      >
-        {/* Glowing ring */}
+    <div className="flex items-center gap-[5px] justify-center mt-3">
+      {[0, 1, 2].map((i) => (
         <motion.div
-          className="absolute inset-[-3px] rounded-full"
+          key={i}
+          className="w-[5px] h-[5px] rounded-full"
           style={{
-            border: `2px solid ${GLOW_COLOR[emotion]}`,
+            background: color,
+            boxShadow: `0 0 6px ${color}, 0 0 12px ${color}60`,
           }}
           animate={{
-            opacity: [0.5, 1, 0.5],
-            scale: [1, 1.04, 1],
+            scale: [0.8, 1.3, 0.8],
+            opacity: [0.4, 1, 0.4],
           }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          transition={{
+            duration: 1.4,
+            repeat: Infinity,
+            delay: i * 0.2,
+            ease: "easeInOut",
+          }}
         />
-        <span className="text-[24px] leading-none select-none">{KAOMOJI[emotion]}</span>
-      </motion.div>
-      <span className="text-[16px] font-semibold text-white/80">시후봇</span>
+      ))}
     </div>
   );
 }
 
-/* ── Main Component ─────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════ */
 export default function FriendChatFlow({ onClose }: Props) {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [step, setStep] = useState(0); // 0=intro, 1=name, 2=phone, 3=done
-  const [input, setInput] = useState("");
-  const [typing, setTyping] = useState(false);
+  const [step, setStep] = useState(0);
+  // 0 = intro ("친구할래?")
+  // 1 = name input
+  // 2 = phone input
+  // 3 = complete
   const [name, setName] = useState("");
+  const [input, setInput] = useState("");
   const [emotion, setEmotion] = useState<NpcEmotion>("default");
-  const phone = useRef("");
-  const [confetti, setConfetti] = useState(false);
   const [showHearts, setShowHearts] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [confetti, setConfetti] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const msgId = useRef(0);
 
-  const scroll = useCallback(() => {
-    setTimeout(() => {
-      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-    }, 50);
-  }, []);
-
-  const addBot = useCallback(
-    (text: string, delay = 500) => {
-      setTyping(true);
-      setEmotion("thinking");
-      scroll();
-      return new Promise<void>((resolve) => {
-        setTimeout(() => {
-          msgId.current++;
-          setMessages((prev) => [...prev, { id: msgId.current, role: "bot", text, typewriter: true }]);
-          setTyping(false);
-          scroll();
-          resolve();
-        }, delay);
-      });
-    },
-    [scroll],
-  );
-
-  const addUser = useCallback(
-    (text: string) => {
-      msgId.current++;
-      setMessages((prev) => [...prev, { id: msgId.current, role: "user", text }]);
-      scroll();
-    },
-    [scroll],
-  );
-
-  // Step 0: Introduction
-  useEffect(() => {
-    const run = async () => {
-      await addBot("안녕! 나는 시후봇이야 👋", 600);
-      setEmotion("default");
-      await addBot("시후와 친구가 되고 싶어?", 800);
-      setEmotion("default");
-    };
-    run();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleChoice = async (choice: boolean) => {
-    if (!choice) {
-      addUser("아니요");
-      await addBot("괜찮아! 다음에 또 와줘 😊", 600);
-      setEmotion("default");
-      setTimeout(onClose, 1500);
-      return;
+  const goNext = useCallback((nextStep: number) => {
+    playButtonClick();
+    setStep(nextStep);
+    if (nextStep === 1 || nextStep === 2) {
+      setTimeout(() => inputRef.current?.focus(), 300);
     }
-    addUser("네! 😄");
-    await addBot("좋아! 이름을 알려줘!", 700);
-    setEmotion("default");
-    setStep(1);
-    setTimeout(() => inputRef.current?.focus(), 100);
+  }, []);
+
+  const handleNameSubmit = () => {
+    if (!input.trim()) return;
+    setName(input.trim());
+    setInput("");
+    setEmotion("happy");
+    goNext(2);
   };
 
-  const handleSubmit = async () => {
+  const handlePhoneSubmit = async () => {
     if (!input.trim()) return;
-    const value = input.trim();
+    const phoneVal = input.trim();
     setInput("");
+    setEmotion("heart");
+    playFriendAdd();
+    setConfetti(true);
+    setShowHearts(true);
+    setStep(3);
 
-    if (step === 1) {
-      // Name step
-      setName(value);
-      addUser(value);
-      setEmotion("happy");
-      await addBot(`${value}! 멋진 이름이다! 💙`, 600);
-      setEmotion("default");
-      await addBot("연락처를 남겨주면 시후가 연락할게! 📱", 800);
-      setEmotion("default");
-      setStep(2);
-      setTimeout(() => inputRef.current?.focus(), 100);
-    } else if (step === 2) {
-      // Phone step
-      phone.current = value;
-      addUser(value);
-      await addBot("저장했어! 잠깐만...", 600);
-
-      // Save to Supabase
-      try {
-        const { supabase: sb } = await import("../lib/supabase");
-        await sb.from("guestbook").insert({
-          name: `🤝 ${name}`,
-          message: `친구추가 — ${value}`,
-          emoji: "🤝",
-        });
-      } catch {
-        /* silent */
-      }
-
-      setStep(3);
-      setEmotion("heart");
-      playFriendAdd();
-      setConfetti(true);
-      setShowHearts(true);
-      await addBot(`친구추가 완료! 🎉\n${name}님을 환영해!`, 500);
-      await addBot("시후가 곧 연락할 거야! 기다려줘 ✨", 800);
-      setTimeout(onClose, 3000);
+    // Save to Supabase
+    try {
+      const { supabase: sb } = await import("../lib/supabase");
+      await sb.from("guestbook").insert({
+        name: `🤝 ${name}`,
+        message: `친구추가 — ${phoneVal}`,
+        emoji: "🤝",
+      });
+    } catch {
+      /* silent */
     }
+
+    setTimeout(onClose, 3500);
+  };
+
+  const handlePhoneInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
+    let formatted = digits;
+    if (digits.length > 3 && digits.length <= 7) {
+      formatted = `${digits.slice(0, 3)}-${digits.slice(3)}`;
+    } else if (digits.length > 7) {
+      formatted = `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+    }
+    setInput(formatted);
   };
 
   return (
@@ -221,241 +172,331 @@ export default function FriendChatFlow({ onClose }: Props) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[200] flex flex-col"
-      style={{
-        background: BG_GRADIENT[emotion],
-        transition: "background 0.6s ease",
-      }}
+      className="fixed inset-0 z-[200] flex flex-col bg-black"
     >
-      {/* ── HEADER ────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          {/* Small header avatar */}
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#30D158] to-[#0EA5E9] flex items-center justify-center flex-shrink-0">
-            <span className="text-[10px] leading-none select-none">{KAOMOJI[emotion]}</span>
-          </div>
-          <div>
-            <p className="text-[15px] font-semibold text-white">시후봇</p>
-            <p className="text-[11px] text-[#30D158] font-medium">● 온라인</p>
-          </div>
+      {/* ── Ambient BG gradient ───────────────────────── */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        animate={{
+          background: [
+            `radial-gradient(ellipse at 50% 40%, ${GLOW[emotion]} 0%, transparent 50%)`,
+          ],
+        }}
+        transition={{ duration: 0.8 }}
+        style={{ opacity: 0.3 }}
+      />
+
+      {/* ── Top bar ───────────────────────────────────── */}
+      <div className="flex items-center justify-between px-5 py-3 relative z-10 flex-shrink-0">
+        {/* Step indicator */}
+        <div className="flex items-center gap-1.5">
+          {[0, 1, 2, 3].map((s) => (
+            <div
+              key={s}
+              className="h-[3px] rounded-full transition-all duration-500"
+              style={{
+                width: s <= step ? 20 : 10,
+                background: s <= step ? ACCENT[emotion] : "rgba(255,255,255,0.1)",
+                boxShadow: s === step ? `0 0 8px ${ACCENT[emotion]}80` : "none",
+              }}
+            />
+          ))}
         </div>
-        <button onClick={onClose} className="p-2 rounded-xl active:bg-white/10 cursor-pointer">
-          <X className="w-6 h-6 text-white/40" />
+        <button
+          onClick={onClose}
+          className="p-2 -mr-2 rounded-xl active:bg-white/10 cursor-pointer"
+        >
+          <X className="w-5 h-5 text-white/40" />
         </button>
       </div>
 
-      {/* ── SCROLLABLE BODY ───────────────────────────────── */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
-        {/* ── NPC CHARACTER AREA ──────────────────────────── */}
-        <div className="flex items-center justify-center py-8" style={{ minHeight: "30vh" }}>
-          <NpcAvatar emotion={emotion} />
-        </div>
-
-        {/* ── DIALOGUE AREA ──────────────────────────────── */}
-        <div className="px-4 pb-4 space-y-3">
-          <AnimatePresence>
-            {messages.map((msg) => (
-              <motion.div
-                key={msg.id}
-                initial={{ opacity: 0, y: 12, scale: 0.96 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.25 }}
-              >
-                {msg.role === "bot" ? (
-                  /* Bot speech card — full width */
-                  <div
-                    className="w-full rounded-2xl p-4 text-[16px] leading-relaxed whitespace-pre-line"
-                    style={{
-                      background: "rgba(255,255,255,0.1)",
-                      color: "rgba(255,255,255,0.9)",
-                    }}
-                  >
-                    {msg.typewriter ? (
-                      <TypewriterText text={msg.text} onDone={scroll} />
-                    ) : (
-                      msg.text
-                    )}
-                  </div>
-                ) : (
-                  /* User message — right aligned */
-                  <div className="flex justify-end">
-                    <div
-                      className="max-w-[80%] px-5 py-3 text-[16px] leading-relaxed whitespace-pre-line"
-                      style={{
-                        background: "#0A84FF",
-                        color: "#fff",
-                        borderRadius: "20px 20px 4px 20px",
-                      }}
-                    >
-                      {msg.text}
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </AnimatePresence>
-
-          {/* Choice buttons (INLINE in dialogue) */}
-          {step === 0 && messages.length >= 2 && !typing && (
+      {/* ── Card Content ──────────────────────────────── */}
+      <div className="flex-1 flex items-center justify-center px-6 relative z-10">
+        <AnimatePresence mode="wait">
+          {/* ── STEP 0: Intro ─────────────────────────── */}
+          {step === 0 && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-2.5"
+              key="intro"
+              variants={cardVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
+              className="w-full max-w-[340px] flex flex-col items-center text-center"
             >
-              <motion.button
-                whileTap={{ scale: 0.96 }}
-                onClick={() => handleChoice(true)}
-                className="w-full py-3.5 rounded-2xl text-[16px] font-semibold cursor-pointer active:brightness-90"
-                style={{ background: "#0A84FF", color: "#fff" }}
-              >
-                네! 😄
-              </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.96 }}
-                onClick={() => handleChoice(false)}
-                className="w-full py-3.5 rounded-2xl text-[15px] font-medium cursor-pointer active:bg-white/10"
-                style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)" }}
-              >
-                다음에 할게요
-              </motion.button>
-            </motion.div>
-          )}
+              <NpcFace emotion="default" size={88} />
+              <NeonDots color={ACCENT.default} />
 
-          {/* Typing indicator */}
-          {typing && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="w-full rounded-2xl p-4"
-              style={{ background: "rgba(255,255,255,0.1)" }}
-            >
-              <div className="flex gap-1.5">
-                {[0, 1, 2].map((i) => (
+              <h2 className="text-[22px] font-bold text-white mt-6 leading-tight">
+                시후와 친구가 될래?
+              </h2>
+              <p className="text-[14px] text-white/40 mt-2 leading-relaxed">
+                친구를 추가하면 시후가 직접 연락할 거야!
+              </p>
+
+              <div className="w-full mt-8 space-y-3">
+                {/* Primary CTA */}
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  whileHover={{ scale: 1.02 }}
+                  onClick={() => goNext(1)}
+                  className="w-full py-4 rounded-2xl text-[17px] font-bold cursor-pointer relative overflow-hidden"
+                  style={{
+                    background: "linear-gradient(135deg, #30D158, #20c997)",
+                    color: "#fff",
+                    boxShadow: "0 4px 24px rgba(48,209,88,0.3), inset 0 1px 0 rgba(255,255,255,0.15)",
+                  }}
+                >
+                  {/* Shimmer */}
                   <motion.div
-                    key={i}
-                    className="w-2 h-2 rounded-full bg-white/40"
-                    animate={{ opacity: [0.3, 1, 0.3], y: [0, -4, 0] }}
-                    transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.15 }}
+                    className="absolute inset-0"
+                    style={{
+                      background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)",
+                      backgroundSize: "200% 100%",
+                    }}
+                    animate={{ backgroundPosition: ["200% 0", "-200% 0"] }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
                   />
-                ))}
+                  <span className="relative z-10">네! 좋아 😄</span>
+                </motion.button>
+
+                {/* Secondary */}
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => {
+                    playButtonClick();
+                    setTimeout(onClose, 300);
+                  }}
+                  className="w-full py-3.5 rounded-2xl text-[15px] font-medium cursor-pointer"
+                  style={{
+                    color: "rgba(255,255,255,0.35)",
+                  }}
+                >
+                  다음에 할게요
+                </motion.button>
               </div>
             </motion.div>
           )}
-        </div>
+
+          {/* ── STEP 1: Name ──────────────────────────── */}
+          {step === 1 && (
+            <motion.div
+              key="name"
+              variants={cardVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
+              className="w-full max-w-[340px] flex flex-col items-center text-center"
+            >
+              <NpcFace emotion="default" size={72} />
+
+              <h2 className="text-[22px] font-bold text-white mt-5">
+                이름이 뭐야? 🎮
+              </h2>
+              <p className="text-[14px] text-white/35 mt-1.5">
+                닉네임이나 실명 아무거나 좋아!
+              </p>
+
+              <div className="w-full mt-8">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleNameSubmit()}
+                  placeholder="이름 입력"
+                  maxLength={20}
+                  autoFocus
+                  className="w-full px-5 py-4 rounded-2xl text-[18px] text-white text-center font-medium placeholder-white/20 outline-none"
+                  style={{
+                    background: "rgba(255,255,255,0.07)",
+                    border: `1.5px solid ${input.trim() ? "#30D158" + "60" : "rgba(255,255,255,0.08)"}`,
+                    transition: "border-color 0.3s, box-shadow 0.3s",
+                    boxShadow: input.trim() ? "0 0 20px rgba(48,209,88,0.1)" : "none",
+                  }}
+                />
+
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  onClick={handleNameSubmit}
+                  disabled={!input.trim()}
+                  className="w-full py-4 rounded-2xl text-[16px] font-bold mt-4 cursor-pointer disabled:opacity-20"
+                  style={{
+                    background: input.trim() ? "linear-gradient(135deg, #0A84FF, #0070E0)" : "rgba(255,255,255,0.06)",
+                    color: "#fff",
+                    boxShadow: input.trim() ? "0 4px 20px rgba(10,132,255,0.3)" : "none",
+                    transition: "all 0.3s ease",
+                  }}
+                >
+                  다음 →
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── STEP 2: Phone ─────────────────────────── */}
+          {step === 2 && (
+            <motion.div
+              key="phone"
+              variants={cardVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
+              className="w-full max-w-[340px] flex flex-col items-center text-center"
+            >
+              <NpcFace emotion="happy" size={72} />
+
+              <h2 className="text-[22px] font-bold text-white mt-5">
+                <span style={{ color: "#FFD60A" }}>{name}</span>
+                <span className="text-white/60">,</span> 멋진 이름! 💙
+              </h2>
+              <p className="text-[14px] text-white/35 mt-1.5">
+                연락처를 남기면 시후가 연락할게
+              </p>
+
+              <div className="w-full mt-8">
+                <input
+                  ref={inputRef}
+                  type="tel"
+                  inputMode="numeric"
+                  value={input}
+                  onChange={handlePhoneInput}
+                  onKeyDown={(e) => e.key === "Enter" && handlePhoneSubmit()}
+                  placeholder="010-0000-0000"
+                  maxLength={13}
+                  autoFocus
+                  className="w-full px-5 py-4 rounded-2xl text-[20px] text-white text-center font-mono tracking-wider placeholder-white/20 outline-none"
+                  style={{
+                    background: "rgba(255,255,255,0.07)",
+                    border: `1.5px solid ${input.length >= 12 ? "#FFD60A60" : "rgba(255,255,255,0.08)"}`,
+                    transition: "border-color 0.3s, box-shadow 0.3s",
+                    boxShadow: input.length >= 12 ? "0 0 20px rgba(255,214,10,0.1)" : "none",
+                  }}
+                />
+
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  onClick={handlePhoneSubmit}
+                  disabled={input.replace(/\D/g, "").length < 10}
+                  className="w-full py-4 rounded-2xl text-[16px] font-bold mt-4 cursor-pointer disabled:opacity-20"
+                  style={{
+                    background: input.replace(/\D/g, "").length >= 10
+                      ? "linear-gradient(135deg, #FFD60A, #FF9F0A)"
+                      : "rgba(255,255,255,0.06)",
+                    color: input.replace(/\D/g, "").length >= 10 ? "#000" : "#fff",
+                    boxShadow: input.replace(/\D/g, "").length >= 10 ? "0 4px 20px rgba(255,214,10,0.25)" : "none",
+                    transition: "all 0.3s ease",
+                  }}
+                >
+                  친구추가 완료! 🎉
+                </motion.button>
+
+                {/* Skip option */}
+                <button
+                  onClick={() => {
+                    setInput("비공개");
+                    setTimeout(handlePhoneSubmit, 100);
+                  }}
+                  className="mt-3 text-[13px] text-white/25 cursor-pointer"
+                >
+                  연락처 없이 추가하기
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── STEP 3: Complete ──────────────────────── */}
+          {step === 3 && (
+            <motion.div
+              key="done"
+              variants={cardVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
+              className="w-full max-w-[340px] flex flex-col items-center text-center"
+            >
+              <NpcFace emotion="heart" size={96} />
+              <NeonDots color={ACCENT.heart} />
+
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <h2 className="text-[24px] font-bold text-white mt-5">
+                  친구추가 완료! 🎉
+                </h2>
+                <p className="text-[15px] text-white/50 mt-2 leading-relaxed">
+                  <span style={{ color: "#FF375F" }}>{name}</span>님을 환영해!
+                  <br />
+                  시후가 곧 연락할 거야 ✨
+                </p>
+              </motion.div>
+
+              {/* Success checkmark */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: [0, 1.2, 1] }}
+                transition={{ duration: 0.6, times: [0, 0.6, 1], delay: 0.5 }}
+                className="mt-6 w-16 h-16 rounded-full flex items-center justify-center"
+                style={{
+                  background: "rgba(48,209,88,0.12)",
+                  boxShadow: "0 0 40px rgba(48,209,88,0.2)",
+                }}
+              >
+                <span className="text-3xl text-[#30D158]">✓</span>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Choice buttons moved INLINE into dialogue area above */}
-
-      {/* ── INPUT (Step 1 & 2) ────────────────────────────── */}
-      {(step === 1 || step === 2) && !typing && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex-shrink-0 px-4 pb-6 pt-2 border-t border-white/8"
-        >
-          <div className="flex gap-3 items-center">
-            <input
-              ref={inputRef}
-              type={step === 2 ? "tel" : "text"}
-              inputMode={step === 2 ? "numeric" : "text"}
-              value={input}
-              onChange={(e) => {
-                if (step === 2) {
-                  // Auto-format phone: 010-0000-0000
-                  const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
-                  let formatted = digits;
-                  if (digits.length > 3 && digits.length <= 7) {
-                    formatted = `${digits.slice(0, 3)}-${digits.slice(3)}`;
-                  } else if (digits.length > 7) {
-                    formatted = `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
-                  }
-                  setInput(formatted);
-                } else {
-                  setInput(e.target.value);
-                }
-              }}
-              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-              placeholder={step === 1 ? "이름을 입력해줘" : "010-0000-0000"}
-              maxLength={step === 1 ? 20 : 13}
-              autoFocus
-              className="flex-1 px-5 py-4 rounded-2xl text-[16px] text-white placeholder-white/35 outline-none"
-              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)" }}
-            />
-            <motion.button
-              whileTap={{ scale: 0.88 }}
-              onClick={handleSubmit}
-              disabled={!input.trim()}
-              className="w-14 h-14 rounded-2xl flex items-center justify-center cursor-pointer disabled:opacity-20 flex-shrink-0"
-              style={{ background: input.trim() ? "#0A84FF" : "rgba(255,255,255,0.06)" }}
-            >
-              <span className="text-white text-xl font-bold">↑</span>
-            </motion.button>
-          </div>
-        </motion.div>
-      )}
-
-      {/* ── Confetti ──────────────────────────────────────── */}
+      {/* ── Confetti ──────────────────────────────────── */}
       {confetti && (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {Array.from({ length: 12 }).map((_, i) => (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-30">
+          {Array.from({ length: 20 }).map((_, i) => (
             <div
               key={i}
               className="absolute"
               style={{
-                left: `${5 + Math.random() * 90}%`,
-                top: -10,
-                width: 10,
-                height: 10,
+                left: `${3 + Math.random() * 94}%`,
+                top: -14,
+                width: 7 + Math.random() * 7,
+                height: 7 + Math.random() * 7,
                 borderRadius: Math.random() > 0.5 ? "50%" : "2px",
-                background: ["#ff6b6b", "#ffd43b", "#51cf66", "#339af0", "#845ef7", "#f06595"][i % 6],
-                animation: "confetti-fall 1.5s ease-in forwards",
-                animationDelay: `${Math.random() * 0.5}s`,
+                background: [
+                  "#ff6b6b", "#ffd43b", "#51cf66", "#339af0",
+                  "#845ef7", "#f06595", "#30D158", "#0EA5E9",
+                ][i % 8],
+                animation: "confetti-fall 2s ease-in forwards",
+                animationDelay: `${Math.random() * 0.7}s`,
               }}
             />
           ))}
         </div>
       )}
 
-      {/* ── Floating hearts ──────────────────────────────── */}
+      {/* ── Floating hearts ──────────────────────────── */}
       {showHearts && (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[0, 1, 2, 3, 4].map((i) => (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-30">
+          {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
-              className="absolute text-2xl"
+              className="absolute text-lg"
               style={{
-                left: `${20 + i * 15}%`,
-                bottom: "30%",
-                animation: "float-heart 2s ease-out forwards",
-                animationDelay: `${i * 0.25}s`,
+                left: `${8 + i * 11}%`,
+                bottom: "20%",
+                animation: "float-heart 2.4s ease-out forwards",
+                animationDelay: `${i * 0.18}s`,
                 opacity: 0,
               }}
             >
-              ❤️
+              {["❤️", "💚", "💙", "💛"][i % 4]}
             </div>
           ))}
-        </div>
-      )}
-
-      {/* ── Success checkmark ────────────────────────────── */}
-      {step === 3 && (
-        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: [0, 1.2, 1], opacity: [0, 1, 1] }}
-            transition={{ duration: 0.6, times: [0, 0.6, 1], ease: "easeOut", delay: 0.3 }}
-            className="w-24 h-24 rounded-full flex items-center justify-center"
-            style={{ background: "rgba(48,209,88,0.15)", backdropFilter: "blur(8px)" }}
-          >
-            <motion.span
-              initial={{ scale: 0 }}
-              animate={{ scale: [0, 1.3, 1] }}
-              transition={{ duration: 0.5, times: [0, 0.6, 1], delay: 0.5 }}
-              className="text-5xl text-[#30D158]"
-            >
-              ✓
-            </motion.span>
-          </motion.div>
         </div>
       )}
     </motion.div>

@@ -352,7 +352,7 @@ export default function HomePage() {
                         label="친구추가"
                         gradient="linear-gradient(135deg, #30D158, #20c997)"
                         onClick={() => setShowFriendAdd(true)}
-                        badge="N"
+
                         delay={0.42}
                         jiggling={jiggleMode}
                         index={SITE_CONFIG.servers.length + 2}
