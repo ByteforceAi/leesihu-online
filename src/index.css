@@ -4,25 +4,16 @@
   --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* Apple Intelligence rainbow border */
-@keyframes rainbow-rotate {
-  0% { --rainbow-angle: 0deg; }
-  100% { --rainbow-angle: 360deg; }
-}
-
+/* Apple Intelligence rainbow border — slow flowing glow */
 @property --rainbow-angle {
   syntax: "<angle>";
   initial-value: 0deg;
   inherits: false;
 }
 
-.apple-border {
-  position: relative;
+@keyframes rainbow-flow {
+  0% { --rainbow-angle: 0deg; }
+  100% { --rainbow-angle: 360deg; }
 }
 
 .apple-border::before {
@@ -31,41 +22,52 @@
   inset: 0;
   z-index: 9999;
   pointer-events: none;
-  border-radius: inherit;
-  padding: 2px;
+  padding: 1.5px;
   background: conic-gradient(
     from var(--rainbow-angle),
-    #ff6b6b, #ffa94d, #ffd43b, #69db7c, #4dabf7, #9775fa, #f783ac, #ff6b6b
+    #ff6b6b 0%,
+    #ffa94d 14%,
+    #ffd43b 28%,
+    #69db7c 42%,
+    #4dabf7 56%,
+    #9775fa 70%,
+    #f783ac 84%,
+    #ff6b6b 100%
   );
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask-composite: exclude;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
-  animation: rainbow-rotate 4s linear infinite;
-  opacity: 0.7;
-  filter: blur(0.5px);
+  animation: rainbow-flow 12s linear infinite;
+  opacity: 0.6;
 }
 
-/* Outer glow version */
+/* Soft outer glow */
 .apple-border::after {
   content: "";
   position: absolute;
-  inset: -3px;
+  inset: -4px;
   z-index: 9998;
   pointer-events: none;
-  border-radius: inherit;
+  padding: 6px;
   background: conic-gradient(
     from var(--rainbow-angle),
-    #ff6b6b, #ffa94d, #ffd43b, #69db7c, #4dabf7, #9775fa, #f783ac, #ff6b6b
+    #ff6b6b 0%,
+    #ffa94d 14%,
+    #ffd43b 28%,
+    #69db7c 42%,
+    #4dabf7 56%,
+    #9775fa 70%,
+    #f783ac 84%,
+    #ff6b6b 100%
   );
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask-composite: exclude;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
-  padding: 5px;
-  animation: rainbow-rotate 4s linear infinite;
-  opacity: 0.3;
-  filter: blur(8px);
+  animation: rainbow-flow 12s linear infinite;
+  opacity: 0.15;
+  filter: blur(12px);
 }
 
 * {
