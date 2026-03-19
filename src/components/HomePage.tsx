@@ -48,8 +48,6 @@ export default function HomePage() {
                iOS CONTENT AREA (scrollable)
              ══════════════════════════════════════ */}
           <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
-            <div className="w-full max-w-[600px] mx-auto">
-
               <AnimatePresence mode="wait">
                 {activeTab === "home" && (
                   <motion.div
@@ -59,8 +57,8 @@ export default function HomePage() {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    {/* ─── Hero Banner (Apple Music style) ─── */}
-                    <div className="relative w-full aspect-[16/10] overflow-hidden">
+                    {/* ─── Hero Banner — FULL WIDTH on all screens ─── */}
+                    <div className="relative w-full aspect-[16/9] max-h-[400px] overflow-hidden">
                       <img
                         src="/assets/bg.png"
                         alt=""
@@ -102,8 +100,8 @@ export default function HomePage() {
                       </div>
                     </div>
 
-                    {/* ─── Content on solid black ─── */}
-                    <div className="px-5 pt-6 pb-28">
+                    {/* ─── Content on solid black — centered ─── */}
+                    <div className="max-w-[600px] mx-auto px-5 pt-6 pb-28">
                       {/* Section: 플레이 */}
                       <h2 className="text-[22px] font-bold text-white mb-3">플레이</h2>
 
@@ -224,9 +222,8 @@ export default function HomePage() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.25 }}
-                    className="px-5 pt-4 pb-28"
+                    className="max-w-[600px] mx-auto px-5 pt-4 pb-28"
                   >
-                    {/* iOS Nav bar style */}
                     <button
                       onClick={() => setActiveTab("home")}
                       className="flex items-center gap-1 text-[#0A84FF] text-[15px] mb-2 cursor-pointer"
@@ -246,7 +243,7 @@ export default function HomePage() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.25 }}
-                    className="px-5 pt-4 pb-28"
+                    className="max-w-[600px] mx-auto px-5 pt-4 pb-28"
                   >
                     <button
                       onClick={() => setActiveTab("home")}
@@ -260,7 +257,6 @@ export default function HomePage() {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
           </div>
 
           {/* ══════════════════════════════════════
