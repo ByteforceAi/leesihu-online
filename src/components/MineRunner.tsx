@@ -66,7 +66,7 @@ interface Cloud {
 export default function MineRunner({ onClose }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameState, setGameState] = useState<GameState>("menu");
-  const [score, setScore] = useState(0);
+  const [, setScore] = useState(0);
   const [hiScore, setHiScore] = useState(() => {
     return parseInt(localStorage.getItem("mineRunnerHi") || "0", 10);
   });
