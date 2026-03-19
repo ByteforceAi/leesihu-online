@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UserPlus, X, Check, PartyPopper } from "lucide-react";
+import { UserPlus, X, Check } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 export default function FriendAdd() {
