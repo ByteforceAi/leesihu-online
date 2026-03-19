@@ -112,7 +112,7 @@ export default function HomePage() {
                   LEESIHU<span className="text-white/30">.ONLINE</span>
                 </h1>
                 <p className="text-[13px] text-white/40 mb-3">
-                  Game Creator & Music Producer
+                  Game Creator
                 </p>
 
                 <VisitorCount />
