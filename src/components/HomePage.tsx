@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, Loader2, Home, Clock, MessageSquare, Music, Pause } from "lucide-react";
+import { ChevronRight, Loader2, Clock, MessageSquare } from "lucide-react";
+import PremiumTabBar from "./PremiumTabBar";
 import BootSequence from "./BootSequence";
 import Guestbook from "./Guestbook";
 import Timeline from "./Timeline";
@@ -276,42 +277,13 @@ export default function HomePage() {
             </AnimatePresence>
           </div>
 
-          {/* ══════ iOS TAB BAR ══════ */}
-          <div
-            className="flex-shrink-0 w-full"
-            style={{
-              background: "rgba(20,20,20,0.85)",
-              backdropFilter: "blur(30px) saturate(180%)",
-              WebkitBackdropFilter: "blur(30px) saturate(180%)",
-              borderTop: "1px solid rgba(255,255,255,0.08)",
-              paddingBottom: "env(safe-area-inset-bottom, 0px)",
-            }}
-          >
-            <div className="max-w-[600px] mx-auto grid grid-cols-4 h-[50px]">
-              {([
-                { id: "home" as Tab, icon: Home, label: "홈" },
-                { id: "timeline" as Tab, icon: Clock, label: "타임라인" },
-                { id: "guestbook" as Tab, icon: MessageSquare, label: "방명록" },
-                { id: "music" as const, icon: isPlaying ? Pause : Music, label: isPlaying ? "재생 중" : "음악" },
-              ]).map((tab) => {
-                const isMusic = tab.id === "music";
-                const isActive = isMusic ? isPlaying : activeTab === tab.id;
-                const color = isMusic && isPlaying ? "#30D158" : isActive ? "#0A84FF" : "rgba(255,255,255,0.35)";
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => isMusic ? toggleMusic() : setActiveTab(tab.id as Tab)}
-                    className="flex flex-col items-center justify-center gap-0.5 cursor-pointer"
-                  >
-                    <tab.icon className="w-[22px] h-[22px]" style={{ color }} />
-                    <span className="text-[10px] font-medium" style={{ color }}>
-                      {tab.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          {/* ══════ PREMIUM TAB BAR ══════ */}
+          <PremiumTabBar
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            isPlaying={isPlaying}
+            onToggleMusic={toggleMusic}
+          />
         </motion.div>
       )}
 
