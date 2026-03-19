@@ -23,6 +23,20 @@ const KAOMOJI: Record<NpcEmotion, string> = {
   heart: "(♡ᴗ♡)",
 };
 
+const GLOW_COLOR: Record<NpcEmotion, string> = {
+  default: "rgba(48,209,88,0.5)",
+  thinking: "rgba(10,132,255,0.5)",
+  happy: "rgba(255,214,10,0.5)",
+  heart: "rgba(255,55,95,0.5)",
+};
+
+const BG_GRADIENT: Record<NpcEmotion, string> = {
+  default: "radial-gradient(ellipse at 50% 30%, rgba(48,209,88,0.05) 0%, #000 70%)",
+  thinking: "radial-gradient(ellipse at 50% 30%, rgba(10,132,255,0.06) 0%, #000 70%)",
+  happy: "radial-gradient(ellipse at 50% 30%, rgba(255,214,10,0.05) 0%, #000 70%)",
+  heart: "radial-gradient(ellipse at 50% 30%, rgba(255,55,95,0.06) 0%, #000 70%)",
+};
+
 /* ── TypewriterText ─────────────────────────────────────── */
 function TypewriterText({ text, onDone }: { text: string; onDone?: () => void }) {
   const [displayed, setDisplayed] = useState("");
@@ -49,21 +63,36 @@ function TypewriterText({ text, onDone }: { text: string; onDone?: () => void })
   return <>{displayed}</>;
 }
 
-/* ── NPC Avatar ─────────────────────────────────────────── */
-function NpcAvatar({ emotion, size = "sm" }: { emotion: NpcEmotion; size?: "sm" | "header" }) {
-  const dim = size === "header" ? "w-10 h-10" : "w-9 h-9";
-  const textSize = size === "header" ? "text-[11px]" : "text-[10px]";
-
+/* ── NPC Avatar (large, centered) ──────────────────────── */
+function NpcAvatar({ emotion }: { emotion: NpcEmotion }) {
   return (
-    <motion.div
-      key={emotion}
-      initial={{ scale: 0.7 }}
-      animate={{ scale: 1 }}
-      transition={{ type: "spring", stiffness: 400, damping: 12 }}
-      className={`${dim} rounded-full bg-gradient-to-br from-[#30D158] to-[#0EA5E9] flex items-center justify-center flex-shrink-0`}
-    >
-      <span className={`${textSize} leading-none select-none`}>{KAOMOJI[emotion]}</span>
-    </motion.div>
+    <div className="flex flex-col items-center gap-2">
+      <motion.div
+        key={emotion}
+        initial={{ scale: 0.7 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", stiffness: 400, damping: 12 }}
+        className="w-24 h-24 rounded-full bg-gradient-to-br from-[#30D158] to-[#0EA5E9] flex items-center justify-center relative"
+        style={{
+          boxShadow: `0 0 24px 6px ${GLOW_COLOR[emotion]}, 0 0 60px 12px ${GLOW_COLOR[emotion]}`,
+        }}
+      >
+        {/* Glowing ring */}
+        <motion.div
+          className="absolute inset-[-3px] rounded-full"
+          style={{
+            border: `2px solid ${GLOW_COLOR[emotion]}`,
+          }}
+          animate={{
+            opacity: [0.5, 1, 0.5],
+            scale: [1, 1.04, 1],
+          }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <span className="text-[24px] leading-none select-none">{KAOMOJI[emotion]}</span>
+      </motion.div>
+      <span className="text-[16px] font-semibold text-white/80">시후봇</span>
+    </div>
   );
 }
 
@@ -192,209 +221,226 @@ export default function FriendChatFlow({ onClose }: Props) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center"
-      style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}
+      className="fixed inset-0 z-[200] flex flex-col"
+      style={{
+        background: BG_GRADIENT[emotion],
+        transition: "background 0.6s ease",
+      }}
     >
-      <motion.div
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        exit={{ y: "100%" }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="w-full max-w-[400px] h-[85vh] sm:h-[500px] rounded-t-3xl sm:rounded-3xl flex flex-col overflow-hidden"
-        style={{ background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.08)" }}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/6">
-          <div className="flex items-center gap-2.5">
-            <NpcAvatar emotion={emotion} size="header" />
-            <div>
-              <p className="text-[14px] font-semibold text-white">시후봇</p>
-              <p className="text-[10px] text-[#30D158]">● 온라인</p>
-            </div>
+      {/* ── HEADER ────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 flex-shrink-0">
+        <div className="flex items-center gap-3">
+          {/* Small header avatar */}
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#30D158] to-[#0EA5E9] flex items-center justify-center flex-shrink-0">
+            <span className="text-[10px] leading-none select-none">{KAOMOJI[emotion]}</span>
           </div>
-          <button onClick={onClose} className="p-1.5 cursor-pointer">
-            <X className="w-5 h-5 text-white/30" />
-          </button>
+          <div>
+            <p className="text-[15px] font-semibold text-white">시후봇</p>
+            <p className="text-[11px] text-[#30D158] font-medium">● 온라인</p>
+          </div>
+        </div>
+        <button onClick={onClose} className="p-2 rounded-xl active:bg-white/10 cursor-pointer">
+          <X className="w-6 h-6 text-white/40" />
+        </button>
+      </div>
+
+      {/* ── SCROLLABLE BODY ───────────────────────────────── */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+        {/* ── NPC CHARACTER AREA ──────────────────────────── */}
+        <div className="flex items-center justify-center py-8" style={{ minHeight: "30vh" }}>
+          <NpcAvatar emotion={emotion} />
         </div>
 
-        {/* Messages */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+        {/* ── DIALOGUE AREA ──────────────────────────────── */}
+        <div className="px-4 pb-4 space-y-3">
           <AnimatePresence>
             {messages.map((msg) => (
               <motion.div
                 key={msg.id}
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                initial={{ opacity: 0, y: 12, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.25 }}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                {msg.role === "bot" && (
-                  <div className="mr-2 mt-1">
-                    <NpcAvatar emotion={emotion} />
+                {msg.role === "bot" ? (
+                  /* Bot speech card — full width */
+                  <div
+                    className="w-full rounded-2xl p-4 text-[16px] leading-relaxed whitespace-pre-line"
+                    style={{
+                      background: "rgba(255,255,255,0.1)",
+                      color: "rgba(255,255,255,0.9)",
+                    }}
+                  >
+                    {msg.typewriter ? (
+                      <TypewriterText text={msg.text} onDone={scroll} />
+                    ) : (
+                      msg.text
+                    )}
+                  </div>
+                ) : (
+                  /* User message — right aligned */
+                  <div className="flex justify-end">
+                    <div
+                      className="max-w-[80%] px-5 py-3 text-[16px] leading-relaxed whitespace-pre-line"
+                      style={{
+                        background: "#0A84FF",
+                        color: "#fff",
+                        borderRadius: "20px 20px 4px 20px",
+                      }}
+                    >
+                      {msg.text}
+                    </div>
                   </div>
                 )}
-                <div
-                  className="max-w-[75%] px-4 py-2.5 text-[15px] leading-relaxed whitespace-pre-line"
-                  style={{
-                    background: msg.role === "user" ? "#0A84FF" : "rgba(255,255,255,0.12)",
-                    color: msg.role === "user" ? "#fff" : "rgba(255,255,255,0.85)",
-                    borderRadius: msg.role === "user" ? "20px 20px 4px 20px" : "20px 20px 20px 4px",
-                  }}
-                >
-                  {msg.role === "bot" && msg.typewriter ? (
-                    <TypewriterText text={msg.text} onDone={scroll} />
-                  ) : (
-                    msg.text
-                  )}
-                </div>
               </motion.div>
             ))}
           </AnimatePresence>
 
           {/* Typing indicator */}
           {typing && (
-            <div className="flex items-center gap-2">
-              <NpcAvatar emotion="thinking" />
-              <div className="px-4 py-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.12)" }}>
-                <div className="flex gap-1">
-                  {[0, 1, 2].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-[6px] h-[6px] rounded-full bg-white/30"
-                      animate={{ opacity: [0.3, 1, 0.3], y: [0, -3, 0] }}
-                      transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.15 }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Choice buttons (Step 0) */}
-          {step === 0 && messages.length >= 2 && !typing && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex gap-2 pl-9"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="w-full rounded-2xl p-4"
+              style={{ background: "rgba(255,255,255,0.1)" }}
             >
-              <motion.button
-                whileTap={{ scale: 0.93 }}
-                onClick={() => handleChoice(true)}
-                className="px-5 py-2.5 rounded-full text-[14px] font-medium cursor-pointer"
-                style={{ background: "#0A84FF", color: "#fff" }}
-              >
-                네! 😄
-              </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.93 }}
-                onClick={() => handleChoice(false)}
-                className="px-5 py-2.5 rounded-full text-[14px] font-medium cursor-pointer border-2 border-white/15"
-                style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}
-              >
-                다음에요
-              </motion.button>
+              <div className="flex gap-1.5">
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    className="w-2 h-2 rounded-full bg-white/40"
+                    animate={{ opacity: [0.3, 1, 0.3], y: [0, -4, 0] }}
+                    transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.15 }}
+                  />
+                ))}
+              </div>
             </motion.div>
           )}
         </div>
+      </div>
 
-        {/* Confetti */}
-        {confetti && (
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={i}
-                className="absolute"
-                style={{
-                  left: `${10 + Math.random() * 80}%`,
-                  top: -10,
-                  width: 8,
-                  height: 8,
-                  borderRadius: Math.random() > 0.5 ? "50%" : "2px",
-                  background: ["#ff6b6b", "#ffd43b", "#51cf66", "#339af0", "#845ef7", "#f06595"][i % 6],
-                  animation: "confetti-fall 1.5s ease-in forwards",
-                  animationDelay: `${Math.random() * 0.5}s`,
-                }}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Floating hearts */}
-        {showHearts && (
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="absolute text-lg"
-                style={{
-                  left: `${35 + i * 15}%`,
-                  bottom: "30%",
-                  animation: "float-heart 2s ease-out forwards",
-                  animationDelay: `${i * 0.3}s`,
-                  opacity: 0,
-                }}
-              >
-                ❤️
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Success checkmark */}
-        {step === 3 && (
-          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-            <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: [0, 1.2, 1], opacity: [0, 1, 1] }}
-              transition={{ duration: 0.6, times: [0, 0.6, 1], ease: "easeOut", delay: 0.3 }}
-              className="w-20 h-20 rounded-full flex items-center justify-center"
-              style={{ background: "rgba(48,209,88,0.15)" }}
-            >
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: [0, 1.3, 1] }}
-                transition={{ duration: 0.5, times: [0, 0.6, 1], delay: 0.5 }}
-                className="text-4xl"
-              >
-                ✓
-              </motion.span>
-            </motion.div>
-          </div>
-        )}
-
-        {/* Input (Step 1 & 2) */}
-        {(step === 1 || step === 2) && !typing && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="px-4 py-3 border-t border-white/6"
+      {/* ── CHOICE BUTTONS (Step 0) ───────────────────────── */}
+      {step === 0 && messages.length >= 2 && !typing && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex-shrink-0 px-5 pb-6 pt-2 space-y-3"
+        >
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={() => handleChoice(true)}
+            className="w-full py-4 rounded-2xl text-[16px] font-semibold cursor-pointer active:brightness-90"
+            style={{ background: "#0A84FF", color: "#fff" }}
           >
-            <div className="flex gap-2">
-              <input
-                ref={inputRef}
-                type={step === 2 ? "tel" : "text"}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                placeholder={step === 1 ? "이름을 입력해줘" : "010-0000-0000"}
-                maxLength={step === 1 ? 20 : 13}
-                autoFocus
-                className="flex-1 px-4 py-3.5 rounded-full text-[14px] text-white placeholder-white/35 outline-none"
-                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}
-              />
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={handleSubmit}
-                disabled={!input.trim()}
-                className="w-11 h-11 rounded-full flex items-center justify-center cursor-pointer disabled:opacity-20"
-                style={{ background: input.trim() ? "#0A84FF" : "rgba(255,255,255,0.04)" }}
-              >
-                <span className="text-white text-lg">↑</span>
-              </motion.button>
+            네! 😄
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={() => handleChoice(false)}
+            className="w-full py-4 rounded-2xl text-[16px] font-semibold cursor-pointer border-2 border-white/15 active:bg-white/5"
+            style={{ background: "transparent", color: "rgba(255,255,255,0.6)" }}
+          >
+            다음에요
+          </motion.button>
+        </motion.div>
+      )}
+
+      {/* ── INPUT (Step 1 & 2) ────────────────────────────── */}
+      {(step === 1 || step === 2) && !typing && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex-shrink-0 px-4 pb-6 pt-2 border-t border-white/8"
+        >
+          <div className="flex gap-3 items-center">
+            <input
+              ref={inputRef}
+              type={step === 2 ? "tel" : "text"}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              placeholder={step === 1 ? "이름을 입력해줘" : "010-0000-0000"}
+              maxLength={step === 1 ? 20 : 13}
+              autoFocus
+              className="flex-1 px-5 py-4 rounded-2xl text-[16px] text-white placeholder-white/35 outline-none"
+              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)" }}
+            />
+            <motion.button
+              whileTap={{ scale: 0.88 }}
+              onClick={handleSubmit}
+              disabled={!input.trim()}
+              className="w-14 h-14 rounded-2xl flex items-center justify-center cursor-pointer disabled:opacity-20 flex-shrink-0"
+              style={{ background: input.trim() ? "#0A84FF" : "rgba(255,255,255,0.06)" }}
+            >
+              <span className="text-white text-xl font-bold">↑</span>
+            </motion.button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ── Confetti ──────────────────────────────────────── */}
+      {confetti && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute"
+              style={{
+                left: `${5 + Math.random() * 90}%`,
+                top: -10,
+                width: 10,
+                height: 10,
+                borderRadius: Math.random() > 0.5 ? "50%" : "2px",
+                background: ["#ff6b6b", "#ffd43b", "#51cf66", "#339af0", "#845ef7", "#f06595"][i % 6],
+                animation: "confetti-fall 1.5s ease-in forwards",
+                animationDelay: `${Math.random() * 0.5}s`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ── Floating hearts ──────────────────────────────── */}
+      {showHearts && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="absolute text-2xl"
+              style={{
+                left: `${20 + i * 15}%`,
+                bottom: "30%",
+                animation: "float-heart 2s ease-out forwards",
+                animationDelay: `${i * 0.25}s`,
+                opacity: 0,
+              }}
+            >
+              ❤️
             </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Success checkmark ────────────────────────────── */}
+      {step === 3 && (
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: [0, 1.2, 1], opacity: [0, 1, 1] }}
+            transition={{ duration: 0.6, times: [0, 0.6, 1], ease: "easeOut", delay: 0.3 }}
+            className="w-24 h-24 rounded-full flex items-center justify-center"
+            style={{ background: "rgba(48,209,88,0.15)", backdropFilter: "blur(8px)" }}
+          >
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: [0, 1.3, 1] }}
+              transition={{ duration: 0.5, times: [0, 0.6, 1], delay: 0.5 }}
+              className="text-5xl text-[#30D158]"
+            >
+              ✓
+            </motion.span>
           </motion.div>
-        )}
-      </motion.div>
+        </div>
+      )}
     </motion.div>
   );
 }

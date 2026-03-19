@@ -13,6 +13,33 @@ interface Message {
 
 const EMOJIS = ["👋", "🔥", "💜", "⭐", "🎮", "🎵"];
 
+// Floating sparkle for empty state background
+function Sparkle({ delay, x, y, size }: { delay: number; x: number; y: number; size: number }) {
+  return (
+    <motion.div
+      className="absolute rounded-full pointer-events-none"
+      style={{
+        left: `${x}%`,
+        top: `${y}%`,
+        width: size,
+        height: size,
+        background: "rgba(255,255,255,0.15)",
+      }}
+      animate={{
+        opacity: [0, 0.6, 0],
+        scale: [0.5, 1.2, 0.5],
+        y: [0, -12, 0],
+      }}
+      transition={{
+        duration: 3,
+        delay,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+    />
+  );
+}
+
 export default function Guestbook() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [name, setName] = useState("");
@@ -63,7 +90,6 @@ export default function Guestbook() {
     });
     if (!error) {
       setText("");
-      // Show success checkmark
       setSendSuccess(true);
       setTimeout(() => setSendSuccess(false), 800);
       const colors = ["#ff6b6b", "#ffd43b", "#51cf66", "#339af0", "#845ef7", "#f06595"];
@@ -89,94 +115,58 @@ export default function Guestbook() {
     return `${Math.floor(hours / 24)}일 전`;
   };
 
+  const avatarColor = (n: string) =>
+    `hsl(${n.charCodeAt(0) * 37 % 360}, 50%, 35%)`;
+
+  const sparkles = Array.from({ length: 14 }, (_, i) => ({
+    delay: i * 0.4,
+    x: 10 + Math.random() * 80,
+    y: 10 + Math.random() * 80,
+    size: 3 + Math.random() * 4,
+  }));
+
   return (
-    <div className="relative">
+    <div className="relative flex flex-col h-full min-h-[70vh]">
       {/* Confetti */}
-      {confetti.map((c) => (
+      <AnimatePresence>
+        {confetti.map((c) => (
+          <motion.div
+            key={c.id}
+            className="absolute pointer-events-none z-50"
+            style={{
+              left: `${c.x}%`,
+              top: 0,
+              width: 6,
+              height: 6,
+              borderRadius: 2,
+              background: c.color,
+            }}
+            initial={{ y: 0, opacity: 1 }}
+            animate={{ y: 300, opacity: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1, delay: c.delay, ease: "easeIn" }}
+          />
+        ))}
+      </AnimatePresence>
+
+      {/* ── 1. INPUT CARD (TOP) ── */}
+      <form onSubmit={handleSubmit} className="flex-shrink-0 mb-4">
         <div
-          key={c.id}
-          className="absolute pointer-events-none"
-          style={{
-            left: `${c.x}%`, top: 0, width: 6, height: 6, borderRadius: 2,
-            background: c.color, animation: "confetti-fall 1s ease-in forwards",
-            animationDelay: `${c.delay}s`, zIndex: 50,
-          }}
-        />
-      ))}
-
-      {/* Messages — chat bubble style */}
-      <div ref={scrollRef} className="space-y-4 mb-5 max-h-[350px] overflow-y-auto pr-1">
-        {!loaded && (
-          <div className="text-center py-8">
-            <div className="w-5 h-5 border-2 border-white/20 border-t-white/50 rounded-full animate-spin mx-auto" />
-          </div>
-        )}
-        {loaded && messages.length === 0 && (
-          <div className="text-center py-8">
-            <span className="text-5xl mb-2 block">💬</span>
-            <p className="text-[14px] text-white/30">첫 번째 메시지를 남겨보세요!</p>
-          </div>
-        )}
-        <AnimatePresence mode="popLayout">
-          {messages.slice(0, 15).map((msg, i) => (
-            <motion.div
-              key={msg.id}
-              initial={{ opacity: 0, y: 15, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ delay: i * 0.03, duration: 0.3 }}
-              layout
-              className="flex gap-2.5"
-            >
-              {/* Avatar */}
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                style={{
-                  background: `hsl(${msg.name.charCodeAt(0) * 37 % 360}, 50%, 35%)`,
-                }}
-              >
-                <span className="text-sm">{msg.emoji}</span>
-              </div>
-
-              {/* Bubble */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-baseline gap-2 mb-0.5">
-                  <span className="text-[14px] font-semibold text-white/80">{msg.name}</span>
-                  <span className="text-[11px] text-white/20">{timeAgo(msg.created_at)}</span>
-                </div>
-                <div
-                  className="inline-block px-4 py-2.5 rounded-2xl rounded-tl-md max-w-full"
-                  style={{
-                    background: "rgba(255,255,255,0.12)",
-                    border: "1px solid rgba(255,255,255,0.05)",
-                  }}
-                >
-                  <p className="text-[14px] text-white/90 break-words leading-relaxed">{msg.message}</p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
-
-      {/* Input — iMessage style */}
-      <form onSubmit={handleSubmit}>
-        <div
-          className="rounded-2xl overflow-hidden"
+          className="rounded-2xl p-4"
           style={{
             background: "rgba(255,255,255,0.08)",
-            border: "1px solid rgba(255,255,255,0.12)",
+            border: "1px solid rgba(255,255,255,0.1)",
           }}
         >
-          {/* Emoji bar */}
-          <div className="flex gap-1.5 px-3 pt-3 pb-1">
+          {/* Emoji row */}
+          <div className="flex gap-1.5 mb-3">
             {EMOJIS.map((e) => (
               <motion.button
                 key={e}
                 type="button"
                 onClick={() => setSelectedEmoji(e)}
                 whileTap={{ scale: 1.3, transition: { duration: 0.1, type: "spring", stiffness: 500 } }}
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-[15px] cursor-pointer transition-all
+                className={`w-9 h-9 rounded-full flex items-center justify-center text-[16px] cursor-pointer transition-all
                   ${selectedEmoji === e
                     ? "bg-white/12 ring-1 ring-white/20 scale-110"
                     : "hover:bg-white/8"}`}
@@ -186,31 +176,34 @@ export default function Guestbook() {
             ))}
           </div>
 
-          {/* Input row */}
-          <div className="flex gap-2 p-3 pt-2">
+          {/* Name + message + send */}
+          <div className="flex gap-2">
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="이름"
               maxLength={20}
-              className="w-16 flex-shrink-0 px-3 py-2.5 rounded-full text-[13px] text-white placeholder-white/35 outline-none text-center"
+              className="w-20 flex-shrink-0 px-3 py-3 rounded-xl text-[13px] text-white placeholder-white/35 outline-none text-center"
               style={{ background: "rgba(255,255,255,0.06)" }}
             />
-            <div className="flex-1 flex items-center rounded-full px-3" style={{ background: "rgba(255,255,255,0.06)" }}>
+            <div
+              className="flex-1 flex items-center rounded-xl px-3"
+              style={{ background: "rgba(255,255,255,0.06)" }}
+            >
               <input
                 type="text"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                placeholder="메시지..."
+                placeholder="메시지를 남겨보세요..."
                 maxLength={100}
-                className="flex-1 py-2.5 text-[13px] text-white placeholder-white/35 outline-none bg-transparent"
+                className="flex-1 py-3 text-[14px] text-white placeholder-white/35 outline-none bg-transparent"
               />
               <motion.button
                 type="submit"
                 disabled={!name.trim() || !text.trim() || sending}
                 whileTap={{ scale: 0.85 }}
-                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer disabled:opacity-20 ml-1"
+                className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer disabled:opacity-20 ml-2"
                 style={{
                   background: sendSuccess
                     ? "#30D158"
@@ -229,7 +222,7 @@ export default function Guestbook() {
                       exit={{ scale: 0, opacity: 0 }}
                       transition={{ duration: 0.15 }}
                     >
-                      <Check className="w-3.5 h-3.5 text-white" />
+                      <Check className="w-4 h-4 text-white" />
                     </motion.span>
                   ) : (
                     <motion.span
@@ -239,7 +232,10 @@ export default function Guestbook() {
                       exit={{ scale: 0, opacity: 0 }}
                       transition={{ duration: 0.15 }}
                     >
-                      <Send className="w-3.5 h-3.5" style={{ color: name.trim() && text.trim() ? "#fff" : "rgba(255,255,255,0.2)" }} />
+                      <Send
+                        className="w-4 h-4"
+                        style={{ color: name.trim() && text.trim() ? "#fff" : "rgba(255,255,255,0.2)" }}
+                      />
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -248,6 +244,100 @@ export default function Guestbook() {
           </div>
         </div>
       </form>
+
+      {/* ── 2. MESSAGES LIST / 3. EMPTY STATE ── */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0">
+        {/* Loading spinner */}
+        {!loaded && (
+          <div className="flex items-center justify-center h-full min-h-[40vh]">
+            <div className="w-6 h-6 border-2 border-white/20 border-t-white/50 rounded-full animate-spin" />
+          </div>
+        )}
+
+        {/* Empty state — fills remaining space */}
+        {loaded && messages.length === 0 && (
+          <div className="flex items-center justify-center h-full min-h-[50vh]">
+            <div className="relative w-full max-w-xs mx-auto">
+              {/* Sparkle particles */}
+              {sparkles.map((s, i) => (
+                <Sparkle key={i} {...s} />
+              ))}
+
+              <div className="flex flex-col items-center gap-3 py-12">
+                <motion.span
+                  className="text-6xl block"
+                  animate={{ y: [0, -6, 0] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  💬
+                </motion.span>
+                <p className="text-[18px] text-white/50 font-medium mt-2">
+                  아직 아무도 없어요
+                </p>
+                <p className="text-[14px] text-white/30">
+                  첫 번째로 발자국을 남겨보세요! 🎉
+                </p>
+
+                {/* Animated dots */}
+                <div className="flex gap-2 mt-4">
+                  {[0, 1, 2].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="w-1.5 h-1.5 rounded-full bg-white/20"
+                      animate={{ opacity: [0.2, 0.7, 0.2], scale: [0.8, 1.2, 0.8] }}
+                      transition={{ duration: 1.4, delay: i * 0.3, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Message cards */}
+        {loaded && messages.length > 0 && (
+          <div className="space-y-3 pb-4">
+            <AnimatePresence mode="popLayout">
+              {messages.slice(0, 30).map((msg, i) => (
+                <motion.div
+                  key={msg.id}
+                  initial={{ opacity: 0, y: 15, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.97 }}
+                  transition={{ delay: i * 0.025, duration: 0.3 }}
+                  layout
+                  className="rounded-xl p-4"
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                  }}
+                >
+                  <div className="flex gap-3">
+                    {/* Avatar */}
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ background: avatarColor(msg.name) }}
+                    >
+                      <span className="text-sm">{msg.emoji}</span>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <span className="text-[14px] font-bold text-white/85">{msg.name}</span>
+                        <span className="text-[11px] text-white/25">{timeAgo(msg.created_at)}</span>
+                      </div>
+                      <p className="text-[15px] text-white/90 break-words leading-relaxed">
+                        {msg.message}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
