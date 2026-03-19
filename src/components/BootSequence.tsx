@@ -73,7 +73,7 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
       onTouchStart={handleEnter}
     >
       {/* Sparkle particles */}
-      {phase !== "black" && phase !== "done" && (
+      {phase !== "black" && phase !== "flash" && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {Array.from({ length: 30 }).map((_, i) => {
             const x = Math.random() * 100;

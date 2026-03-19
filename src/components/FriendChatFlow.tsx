@@ -19,7 +19,7 @@ export default function FriendChatFlow({ onClose }: Props) {
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const phone = useRef("");
   const [confetti, setConfetti] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -88,7 +88,7 @@ export default function FriendChatFlow({ onClose }: Props) {
       setTimeout(() => inputRef.current?.focus(), 100);
     } else if (step === 2) {
       // Phone step
-      setPhone(value);
+      phone.current = value;
       addUser(value);
       await addBot("저장했어! 잠깐만...", 600);
 
