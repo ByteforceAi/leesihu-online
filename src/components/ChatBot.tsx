@@ -111,7 +111,7 @@ export default function ChatBot() {
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-[76px] right-4 z-50 w-12 h-12 rounded-full flex items-center justify-center cursor-pointer"
+            className="fixed bottom-[72px] right-5 z-50 w-12 h-12 rounded-full flex items-center justify-center cursor-pointer"
             style={{
               background: "linear-gradient(135deg, #0EA5E9, #6366F1)",
               boxShadow: "0 4px 20px rgba(14,165,233,0.4)",
@@ -132,9 +132,9 @@ export default function ChatBot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.25, ease: [0.2, 0.8, 0.2, 1] }}
-            className="fixed bottom-[76px] right-4 z-50 w-[340px] max-w-[calc(100vw-32px)] rounded-2xl overflow-hidden flex flex-col"
+            className="fixed bottom-[72px] right-5 z-50 w-[340px] max-w-[calc(100vw-32px)] rounded-2xl overflow-hidden flex flex-col"
             style={{
-              height: "min(420px, calc(100vh - 120px))",
+              height: "min(400px, calc(100vh - 140px))",
               background: "rgba(20,20,20,0.95)",
               border: "1px solid rgba(255,255,255,0.1)",
               boxShadow: "0 12px 40px rgba(0,0,0,0.5)",
