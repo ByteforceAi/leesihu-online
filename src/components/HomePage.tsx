@@ -52,7 +52,10 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="relative w-full h-full overflow-hidden select-none bg-black apple-glow rounded-none md:rounded-[12px]">
+    <div className="relative w-full h-full select-none">
+    {/* Apple Intelligence glow wrapper */}
+    <div className="absolute inset-0 apple-glow rounded-none md:rounded-[12px]" />
+    <div className="relative w-full h-full overflow-hidden bg-black rounded-none md:rounded-[12px]" style={{ zIndex: 1 }}>
       {/* Audio element */}
       {SITE_CONFIG.music.enabled && (
         <audio ref={audioRef} src={SITE_CONFIG.music.src} preload="metadata" loop />
@@ -314,6 +317,7 @@ export default function HomePage() {
 
       {/* Boot sequence */}
       {booting && <BootSequence onComplete={handleBootComplete} />}
+    </div>
     </div>
   );
 }
