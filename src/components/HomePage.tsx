@@ -52,7 +52,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="relative w-full h-full overflow-hidden select-none bg-black apple-border rounded-none md:rounded-[12px]">
+    <div className="relative w-full h-full overflow-hidden select-none bg-black apple-glow rounded-none md:rounded-[12px]">
       {/* Audio element */}
       {SITE_CONFIG.music.enabled && (
         <audio ref={audioRef} src={SITE_CONFIG.music.src} preload="metadata" loop />

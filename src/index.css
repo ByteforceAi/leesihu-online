@@ -4,70 +4,55 @@
   --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-/* Apple Intelligence rainbow border — slow flowing glow */
-@property --rainbow-angle {
+/* ═══ Apple Intelligence Glow Border ═══
+   Thin glowing rainbow that wraps around screen edges.
+   Uses ::before as gradient layer BEHIND the element,
+   with the element's own black bg masking the center. */
+
+@property --glow-angle {
   syntax: "<angle>";
   initial-value: 0deg;
   inherits: false;
 }
 
-@keyframes rainbow-flow {
-  0% { --rainbow-angle: 0deg; }
-  100% { --rainbow-angle: 360deg; }
+@keyframes glow-flow {
+  0% { --glow-angle: 0deg; }
+  100% { --glow-angle: 360deg; }
 }
 
-.apple-border::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 9999;
-  pointer-events: none;
-  padding: 1.5px;
-  background: conic-gradient(
-    from var(--rainbow-angle),
-    #ff6b6b 0%,
-    #ffa94d 14%,
-    #ffd43b 28%,
-    #69db7c 42%,
-    #4dabf7 56%,
-    #9775fa 70%,
-    #f783ac 84%,
-    #ff6b6b 100%
-  );
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  animation: rainbow-flow 12s linear infinite;
-  opacity: 0.6;
+.apple-glow {
+  position: relative;
+  isolation: isolate;
 }
 
-/* Soft outer glow */
-.apple-border::after {
+/* Gradient layer — sits BEHIND the element */
+.apple-glow::before {
   content: "";
   position: absolute;
-  inset: -4px;
-  z-index: 9998;
-  pointer-events: none;
-  padding: 6px;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
   background: conic-gradient(
-    from var(--rainbow-angle),
-    #ff6b6b 0%,
-    #ffa94d 14%,
-    #ffd43b 28%,
-    #69db7c 42%,
-    #4dabf7 56%,
-    #9775fa 70%,
-    #f783ac 84%,
-    #ff6b6b 100%
+    from var(--glow-angle),
+    #ff6b6b, #ff922b, #ffd43b, #51cf66, #339af0, #845ef7, #f06595, #ff6b6b
   );
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  animation: rainbow-flow 12s linear infinite;
-  opacity: 0.15;
-  filter: blur(12px);
+  animation: glow-flow 8s linear infinite;
+}
+
+/* Soft outer glow behind the gradient */
+.apple-glow::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  z-index: -2;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--glow-angle),
+    #ff6b6b, #ff922b, #ffd43b, #51cf66, #339af0, #845ef7, #f06595, #ff6b6b
+  );
+  animation: glow-flow 8s linear infinite;
+  filter: blur(15px);
+  opacity: 0.4;
 }
 
 * {
