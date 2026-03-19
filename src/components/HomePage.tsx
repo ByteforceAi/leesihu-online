@@ -1,261 +1,214 @@
-import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import ParticleCanvas from "./ParticleCanvas";
-import Stars from "./Stars";
-import ServerSelect from "./ServerSelect";
-import MusicPlayer from "./MusicPlayer";
+import { useState, useCallback } from "react";
+import { motion } from "framer-motion";
+import { ChevronRight, Gamepad2, Cpu, Loader2 } from "lucide-react";
 import BootSequence from "./BootSequence";
+import MusicPlayer from "./MusicPlayer";
 import { SITE_CONFIG } from "../config/site";
+
+const serverIcons: Record<string, React.ReactNode> = {
+  game: <Gamepad2 className="w-6 h-6" />,
+  simulator: <Cpu className="w-6 h-6" />,
+};
 
 export default function HomePage() {
   const [booting, setBooting] = useState(true);
-  const [phase, setPhase] = useState(0);
-  const [showNav, setShowNav] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  // After boot completes, start Phase 0 → 1 transition
   const handleBootComplete = useCallback(() => {
     setBooting(false);
-    // Phase 0 → 1: auto-transition after 500ms
-    setTimeout(() => setPhase(1), 500);
+    setTimeout(() => setReady(true), 100);
   }, []);
 
-  // Phase 2 → 3: auto-transition after 1500ms
-  useEffect(() => {
-    if (phase === 2) {
-      const timer = setTimeout(() => setPhase(3), 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [phase]);
-
-  // Phase 1 click handler → Phase 2
-  const handleClick = useCallback(() => {
-    if (phase === 1) {
-      setPhase(2);
-    }
-  }, [phase]);
-
-  // Background filter based on phase
-  const bgFilter =
-    phase <= 1
-      ? "brightness(0.5) saturate(1.1)"
-      : phase === 2
-        ? "brightness(0.7) saturate(1.25)"
-        : "brightness(0.55) saturate(1.2)";
+  const handleCardTap = (server: (typeof SITE_CONFIG.servers)[0]) => {
+    if (server.disabled || loadingId) return;
+    setLoadingId(server.id);
+    setTimeout(() => {
+      window.open(server.url, "_blank");
+      setLoadingId(null);
+    }, 800);
+  };
 
   return (
-    <div
-      className="relative w-full h-full overflow-hidden select-none"
-      style={{ touchAction: phase === 1 ? "manipulation" : "auto" }}
-      onClick={handleClick}
-    >
-      {/* Background layer */}
+    <div className="relative w-full h-full overflow-hidden select-none">
+      {/* Background image + overlay */}
       <div className="absolute inset-0 z-0">
-        {/* Background image */}
         <img
           src="/assets/bg.png"
           alt=""
-          className="absolute inset-0 w-full h-full object-cover transition-all duration-[1500ms] ease-out"
-          style={{ filter: bgFilter }}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{
+            filter: "brightness(0.35) blur(2px) saturate(1.2)",
+          }}
           onError={(e) => {
-            // Fallback: hide image so gradient shows through
             (e.target as HTMLImageElement).style.display = "none";
           }}
         />
-
-        {/* CSS gradient fallback (shows when image missing or as overlay) */}
-        <div
-          className="absolute inset-0 transition-all duration-[1500ms] ease-out"
-          style={{
-            background: `
-              radial-gradient(ellipse at 50% 40%, rgba(13, 60, 40, 0.8) 0%, rgba(10, 15, 20, 1) 70%),
-              radial-gradient(ellipse at 80% 20%, rgba(52, 211, 153, 0.08) 0%, transparent 50%),
-              radial-gradient(ellipse at 20% 60%, rgba(251, 191, 36, 0.05) 0%, transparent 50%),
-              linear-gradient(to bottom, #0a0f14 0%, #0d1a12 50%, #0a0f14 100%)
-            `,
-            filter: bgFilter,
-            mixBlendMode: "multiply",
-          }}
-        />
-
-        {/* Gradient overlay */}
+        {/* Dark gradient overlay for text readability */}
         <div
           className="absolute inset-0"
           style={{
-            background:
-              "linear-gradient(to bottom, rgba(10, 15, 20, 0.5) 0%, rgba(13, 26, 18, 0.2) 40%, rgba(10, 15, 20, 0.6) 100%)",
-          }}
-        />
-
-        {/* Vignette */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%)",
+            background: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.5) 100%)",
           }}
         />
       </div>
 
-      {/* Stars */}
-      <Stars />
-
-      {/* Particles */}
-      <ParticleCanvas converge={phase === 2} />
-
-      {/* Content layer */}
-      <div className="relative z-10 w-full h-full flex flex-col items-center justify-center">
-        {/* Phase 1: Atmospheric text */}
-        <AnimatePresence>
-          {phase === 1 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.8 }}
-              className="flex flex-col items-center gap-4 cursor-pointer px-6"
+      {/* Main content */}
+      {ready && (
+        <div className="relative z-10 w-full h-full flex flex-col items-center justify-center px-5">
+          {/* Title area */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.2, 0.8, 0.2, 1] }}
+            className="text-center mb-10"
+          >
+            <h1
+              className="text-3xl md:text-4xl font-bold tracking-[2px] mb-1"
+              style={{ color: "#fff", fontFamily: "'Inter', sans-serif" }}
             >
-              <p
-                className="font-display text-center leading-relaxed"
-                style={{
-                  fontSize: "clamp(14px, 4vw, 20px)",
-                  letterSpacing: "3px",
-                  color: "rgba(200, 230, 210, 0.7)",
-                }}
-              >
-                블록 하나하나에 담긴 세계가
-              </p>
-              <p
-                className="font-display text-center leading-relaxed"
-                style={{
-                  fontSize: "clamp(14px, 4vw, 20px)",
-                  letterSpacing: "3px",
-                  color: "rgba(200, 230, 210, 0.7)",
-                }}
-              >
-                당신의 발걸음을 기다리고 있습니다
-              </p>
-
-              {/* Hint */}
-              <p
-                className="mt-12 animate-hint-breath"
-                style={{
-                  fontSize: "clamp(11px, 2.5vw, 13px)",
-                  letterSpacing: "4px",
-                  color: "rgba(52, 211, 153, 0.5)",
-                }}
-              >
-                {SITE_CONFIG.enterText}
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Phase 3: Portal reveal */}
-        <AnimatePresence>
-          {phase === 3 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              className="flex flex-col items-center px-6"
+              LEESIHU<span style={{ color: "rgba(255,255,255,0.4)" }}>.ONLINE</span>
+            </h1>
+            <p
+              className="text-sm tracking-wide"
+              style={{ color: "rgba(255,255,255,0.35)" }}
             >
-              {/* Category text */}
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, delay: 0 }}
-                className="font-display mb-4"
-                style={{
-                  fontSize: "clamp(11px, 2.5vw, 14px)",
-                  letterSpacing: "8px",
-                  color: "rgba(52, 211, 153, 0.6)",
-                  textShadow: "0 0 20px rgba(52, 211, 153, 0.3)",
-                }}
-              >
-                {SITE_CONFIG.categoryText}
-              </motion.p>
+              이시후월드에 오신 것을 환영합니다
+            </p>
+          </motion.div>
 
-              {/* Main title */}
-              <motion.h1
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1.5, delay: 0.2, ease: [0.23, 1, 0.32, 1] }}
-                className="font-display font-semibold text-center"
-                style={{
-                  fontSize: "clamp(38px, 11vw, 80px)",
-                  letterSpacing: "clamp(6px, 2vw, 18px)",
-                  background:
-                    "linear-gradient(135deg, #a7f3d0 0%, #34d399 30%, #fbbf24 70%, #fde68a 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                  filter: "drop-shadow(0 0 30px rgba(52, 211, 153, 0.3))",
-                }}
-              >
-                {SITE_CONFIG.title}
-              </motion.h1>
+          {/* Server cards — iOS glass style */}
+          <div className="w-full max-w-[420px] space-y-3">
+            {SITE_CONFIG.servers.map((server, index) => {
+              const isLoading = loadingId === server.id;
 
-              {/* Decorative line */}
-              <motion.div
-                initial={{ scaleX: 0, opacity: 0 }}
-                animate={{ scaleX: 1, opacity: 1 }}
-                transition={{ duration: 1, delay: 0.5 }}
-                className="w-48 md:w-64 h-px my-4"
-                style={{
-                  background:
-                    "linear-gradient(to right, transparent, rgba(52, 211, 153, 0.4), rgba(251, 191, 36, 0.3), transparent)",
-                }}
-              />
+              return (
+                <motion.button
+                  key={server.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: 0.2 + index * 0.12,
+                    duration: 0.6,
+                    ease: [0.2, 0.8, 0.2, 1],
+                  }}
+                  onClick={() => handleCardTap(server)}
+                  disabled={server.disabled || isLoading}
+                  className={`
+                    group w-full rounded-2xl text-left cursor-pointer
+                    transition-all duration-300 ease-out
+                    active:scale-[0.97]
+                    ${server.disabled ? "opacity-40 cursor-not-allowed" : ""}
+                  `}
+                  style={{
+                    background: "rgba(255,255,255,0.08)",
+                    backdropFilter: "blur(40px) saturate(150%)",
+                    WebkitBackdropFilter: "blur(40px) saturate(150%)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    boxShadow: "0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.06)",
+                  }}
+                >
+                  <div className="flex items-center gap-4 p-4 md:p-5">
+                    {/* Icon */}
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{
+                        background: server.id === "game"
+                          ? "linear-gradient(135deg, #30D158, #34d399)"
+                          : "linear-gradient(135deg, #0EA5E9, #6366F1)",
+                      }}
+                    >
+                      <div className="text-white">
+                        {serverIcons[server.id]}
+                      </div>
+                    </div>
 
-              {/* Suffix */}
-              <motion.p
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, delay: 0.6 }}
-                className="font-display"
-                style={{
-                  fontSize: "clamp(16px, 4vw, 24px)",
-                  letterSpacing: "clamp(4px, 1.5vw, 12px)",
-                  color: "rgba(251, 191, 36, 0.7)",
-                  textShadow: "0 0 15px rgba(251, 191, 36, 0.2)",
-                }}
-              >
-                {SITE_CONFIG.titleSuffix}
-              </motion.p>
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h3
+                          className="text-base font-semibold"
+                          style={{ color: "#fff" }}
+                        >
+                          {server.name}
+                        </h3>
+                        {/* Status dot */}
+                        <div className="flex items-center gap-1.5">
+                          <div className="relative">
+                            <div
+                              className="w-[6px] h-[6px] rounded-full bg-[#30D158]"
+                            />
+                            <div
+                              className="absolute inset-0 w-[6px] h-[6px] rounded-full bg-[#30D158] animate-ping opacity-40"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <p
+                        className="text-xs"
+                        style={{ color: "rgba(255,255,255,0.4)" }}
+                      >
+                        {server.description}
+                      </p>
+                    </div>
 
-              {/* CTA Button */}
-              <motion.button
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 1, delay: 1, ease: [0.23, 1, 0.32, 1] }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowNav(true);
-                }}
-                className="mt-12 px-12 py-4 rounded-full font-display text-sm tracking-[6px] cursor-pointer
-                  transition-all duration-500 hover:scale-105
-                  hover:shadow-[0_0_40px_rgba(52,211,153,0.2)]"
-                style={{
-                  background: "rgba(52, 211, 153, 0.08)",
-                  border: "1px solid rgba(52, 211, 153, 0.25)",
-                  color: "rgba(52, 211, 153, 0.85)",
-                  textShadow: "0 0 10px rgba(52, 211, 153, 0.3)",
-                }}
-              >
-                {SITE_CONFIG.buttonText}
-              </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+                    {/* Arrow / Loading */}
+                    <div className="flex-shrink-0">
+                      {isLoading ? (
+                        <Loader2 className="w-5 h-5 text-white/40 animate-spin" />
+                      ) : (
+                        <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-white/50 transition-colors" />
+                      )}
+                    </div>
+                  </div>
 
-      {/* Server select modal */}
-      <ServerSelect open={showNav} onClose={() => setShowNav(false)} />
+                  {/* Loading bar */}
+                  {isLoading && (
+                    <div className="px-4 pb-3">
+                      <div
+                        className="h-[2px] rounded-full overflow-hidden"
+                        style={{ background: "rgba(255,255,255,0.06)" }}
+                      >
+                        <motion.div
+                          initial={{ width: "0%" }}
+                          animate={{ width: "100%" }}
+                          transition={{ duration: 0.7, ease: "easeInOut" }}
+                          className="h-full rounded-full"
+                          style={{
+                            background: server.id === "game"
+                              ? "linear-gradient(90deg, #30D158, #34d399)"
+                              : "linear-gradient(90deg, #0EA5E9, #6366F1)",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </motion.button>
+              );
+            })}
+          </div>
+
+          {/* Footer */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="mt-10 text-center"
+            style={{
+              fontSize: "11px",
+              color: "rgba(255,255,255,0.2)",
+              letterSpacing: "1px",
+            }}
+          >
+            leesihu.online
+          </motion.p>
+        </div>
+      )}
 
       {/* Music player */}
-      <MusicPlayer />
+      {ready && <MusicPlayer />}
 
-      {/* Boot sequence overlay */}
+      {/* Boot sequence */}
       {booting && <BootSequence onComplete={handleBootComplete} />}
     </div>
   );

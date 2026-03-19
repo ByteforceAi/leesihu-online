@@ -1,256 +1,140 @@
-import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 
 interface BootSequenceProps {
   onComplete: () => void;
 }
 
-const bootLines = [
-  { text: "LEESIHU.ONLINE PORTAL SYSTEM v2.0", delay: 0 },
-  { text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", delay: 200 },
-  { text: "", delay: 300 },
-  { text: "Initializing quantum bridge...", delay: 400 },
-  { text: "[OK] Neural network connected", delay: 900 },
-  { text: "[OK] World data synchronized", delay: 1400 },
-  { text: "[OK] Block matrix loaded: 256 chunks", delay: 1900 },
-  { text: "", delay: 2300 },
-  { text: "Establishing portal connection...", delay: 2400 },
-  { text: "█████████████████████████ 100%", delay: 2900 },
-  { text: "", delay: 3300 },
-  { text: "PORTAL GATEWAY: ACTIVE", delay: 3400 },
-  { text: "Welcome, Player.", delay: 3900 },
-];
-
-function TypewriterLine({ text, onDone }: { text: string; onDone: () => void }) {
-  const [displayed, setDisplayed] = useState("");
-  const [done, setDone] = useState(false);
-
-  useEffect(() => {
-    if (text === "") {
-      setDone(true);
-      onDone();
-      return;
-    }
-
-    let i = 0;
-    const interval = setInterval(() => {
-      i++;
-      setDisplayed(text.slice(0, i));
-      if (i >= text.length) {
-        clearInterval(interval);
-        setDone(true);
-        onDone();
-      }
-    }, 25);
-
-    return () => clearInterval(interval);
-  }, [text, onDone]);
-
-  if (text === "") return <div className="h-4" />;
-
-  const isOk = text.startsWith("[OK]");
-  const isPortal = text.includes("PORTAL GATEWAY: ACTIVE");
-  const isWelcome = text.includes("Welcome");
-  const isProgress = text.includes("█");
-  const isTitle = text.includes("LEESIHU.ONLINE");
-
-  return (
-    <div
-      className="font-mono leading-relaxed"
-      style={{
-        fontSize: "clamp(11px, 2vw, 14px)",
-        color: isPortal
-          ? "#34d399"
-          : isWelcome
-            ? "#fbbf24"
-            : isOk
-              ? "rgba(52,211,153,0.7)"
-              : isProgress
-                ? "rgba(52,211,153,0.5)"
-                : isTitle
-                  ? "rgba(200,230,210,0.9)"
-                  : "rgba(200,230,210,0.5)",
-        textShadow: isPortal
-          ? "0 0 20px rgba(52,211,153,0.5)"
-          : isWelcome
-            ? "0 0 15px rgba(251,191,36,0.4)"
-            : "none",
-      }}
-    >
-      {displayed}
-      {!done && (
-        <span
-          className="inline-block w-[8px] h-[14px] ml-[2px] align-middle"
-          style={{
-            backgroundColor: "rgba(52,211,153,0.8)",
-            animation: "blink 0.6s step-end infinite",
-          }}
-        />
-      )}
-    </div>
-  );
-}
-
 export default function BootSequence({ onComplete }: BootSequenceProps) {
-  const [visibleLines, setVisibleLines] = useState<number[]>([]);
-  const [phase, setPhase] = useState<"boot" | "portal" | "done">("boot");
-  const [_linesDone, setLinesDone] = useState<Set<number>>(new Set());
+  const [progress, setProgress] = useState(0);
+  const [phase, setPhase] = useState<"logo" | "loading" | "flash" | "done">("logo");
 
-  // Trigger lines sequentially based on delay
   useEffect(() => {
-    const timers = bootLines.map((line, index) =>
-      setTimeout(() => {
-        setVisibleLines((prev) => [...prev, index]);
-      }, line.delay)
-    );
+    // Phase 1: Show logo (0.5s)
+    const t1 = setTimeout(() => setPhase("loading"), 500);
 
-    // After last line, wait then transition to portal phase
-    const portalTimer = setTimeout(() => {
-      setPhase("portal");
-    }, 4800);
+    // Phase 2: Progress bar fills (2s)
+    const interval = setInterval(() => {
+      setProgress((p) => {
+        if (p >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        // Ease-in-out progress curve
+        const remaining = 100 - p;
+        const step = Math.max(0.5, remaining * 0.06);
+        return Math.min(100, p + step);
+      });
+    }, 30);
 
-    const doneTimer = setTimeout(() => {
+    // Phase 3: Flash + done (at 2.8s)
+    const t3 = setTimeout(() => {
+      setProgress(100);
+      setPhase("flash");
+    }, 2800);
+
+    // Phase 4: Complete (at 3.3s)
+    const t4 = setTimeout(() => {
       setPhase("done");
       onComplete();
-    }, 6500);
+    }, 3300);
 
     return () => {
-      timers.forEach(clearTimeout);
-      clearTimeout(portalTimer);
-      clearTimeout(doneTimer);
+      clearTimeout(t1);
+      clearTimeout(t3);
+      clearTimeout(t4);
+      clearInterval(interval);
     };
   }, [onComplete]);
 
-  const handleLineDone = useCallback((index: number) => {
-    setLinesDone((prev) => new Set(prev).add(index));
-  }, []);
+  if (phase === "done") return null;
 
   return (
-    <AnimatePresence>
-      {phase !== "done" && (
+    <motion.div
+      initial={{ opacity: 1 }}
+      animate={{ opacity: phase === "flash" ? 0 : 1 }}
+      transition={{ duration: 0.5 }}
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center"
+      style={{ background: "#000" }}
+    >
+      {/* White flash */}
+      {phase === "flash" && (
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.8 }}
-          className="absolute inset-0 z-30 flex items-center justify-center"
-          style={{ background: "#050a08" }}
-        >
-          {/* Neon spinning rings */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            {/* Outer ring */}
-            <div
-              className="absolute w-[300px] h-[300px] md:w-[400px] md:h-[400px] rounded-full"
-              style={{
-                border: "1px solid rgba(52,211,153,0.1)",
-                animation: "spin 8s linear infinite",
-              }}
-            >
-              {/* Neon arc segment */}
-              <div
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-[2px]"
-                style={{
-                  background: "linear-gradient(to right, transparent, #34d399, transparent)",
-                  boxShadow: "0 0 15px rgba(52,211,153,0.5), 0 0 30px rgba(52,211,153,0.2)",
-                }}
-              />
-            </div>
+          animate={{ opacity: [0, 0.8, 0] }}
+          transition={{ duration: 0.5 }}
+          className="absolute inset-0 bg-white"
+        />
+      )}
 
-            {/* Middle ring - counter spin */}
-            <div
-              className="absolute w-[220px] h-[220px] md:w-[300px] md:h-[300px] rounded-full"
-              style={{
-                border: "1px solid rgba(251,191,36,0.08)",
-                animation: "spin 12s linear infinite reverse",
-              }}
-            >
-              <div
-                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-[2px]"
-                style={{
-                  background: "linear-gradient(to right, transparent, #fbbf24, transparent)",
-                  boxShadow: "0 0 12px rgba(251,191,36,0.4), 0 0 25px rgba(251,191,36,0.15)",
-                }}
-              />
-            </div>
-
-            {/* Inner ring */}
-            <div
-              className="absolute w-[140px] h-[140px] md:w-[200px] md:h-[200px] rounded-full"
-              style={{
-                border: "1px solid rgba(52,211,153,0.06)",
-                animation: "spin 6s linear infinite",
-              }}
-            >
-              <div
-                className="absolute right-0 top-1/2 -translate-y-1/2 w-12 h-[1.5px]"
-                style={{
-                  background: "linear-gradient(to right, transparent, #34d399, transparent)",
-                  boxShadow: "0 0 10px rgba(52,211,153,0.4)",
-                }}
-              />
-            </div>
-
-            {/* Center dot pulse */}
-            <div
-              className="absolute w-3 h-3 rounded-full"
-              style={{
-                backgroundColor: "rgba(52,211,153,0.6)",
-                boxShadow: "0 0 20px rgba(52,211,153,0.4), 0 0 40px rgba(52,211,153,0.2)",
-                animation: "pulse 2s ease-in-out infinite",
-              }}
-            />
-
-            {/* Portal activation flash */}
-            {phase === "portal" && (
-              <motion.div
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 3, opacity: [0, 0.4, 0] }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
-                className="absolute w-[200px] h-[200px] rounded-full"
-                style={{
-                  background: "radial-gradient(circle, rgba(52,211,153,0.3) 0%, transparent 70%)",
-                }}
-              />
-            )}
-          </div>
-
-          {/* Terminal text overlay */}
-          <div className="relative z-10 w-full max-w-[500px] px-8">
-            <div className="space-y-1">
-              {visibleLines.map((lineIndex) => (
-                <TypewriterLine
-                  key={lineIndex}
-                  text={bootLines[lineIndex].text}
-                  onDone={() => handleLineDone(lineIndex)}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Scan lines overlay */}
+      {/* Logo */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, ease: [0.2, 0.8, 0.2, 1] }}
+        className="flex flex-col items-center"
+      >
+        {/* Logo mark - minimal geometric */}
+        <div className="relative mb-8">
           <div
-            className="absolute inset-0 pointer-events-none opacity-[0.03]"
+            className="w-16 h-16 rounded-2xl flex items-center justify-center"
             style={{
-              backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(52,211,153,0.1) 2px, rgba(52,211,153,0.1) 4px)",
-            }}
-          />
-
-          {/* Skip hint */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 2 }}
-            className="absolute bottom-8 text-center w-full"
-            style={{
-              fontSize: "11px",
-              letterSpacing: "3px",
-              color: "rgba(52,211,153,0.25)",
+              background: "linear-gradient(135deg, #30D158 0%, #34d399 50%, #0EA5E9 100%)",
+              boxShadow: "0 0 40px rgba(48,209,88,0.2)",
             }}
           >
-            SYSTEM INITIALIZING...
-          </motion.p>
+            <span className="text-white text-2xl font-bold" style={{ fontFamily: "'Inter', sans-serif" }}>
+              L
+            </span>
+          </div>
+          {/* Subtle glow ring */}
+          <div
+            className="absolute -inset-4 rounded-3xl"
+            style={{
+              background: "radial-gradient(circle, rgba(48,209,88,0.08) 0%, transparent 70%)",
+            }}
+          />
+        </div>
+
+        {/* Title */}
+        <h1
+          className="text-xl tracking-[8px] mb-2 font-medium"
+          style={{ color: "rgba(255,255,255,0.9)", fontFamily: "'Inter', sans-serif" }}
+        >
+          LEESIHU
+        </h1>
+        <p
+          className="text-xs tracking-[4px] mb-12"
+          style={{ color: "rgba(255,255,255,0.3)" }}
+        >
+          .ONLINE
+        </p>
+      </motion.div>
+
+      {/* iOS-style progress bar */}
+      {(phase === "loading" || phase === "flash") && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="w-48"
+        >
+          <div
+            className="h-[3px] rounded-full overflow-hidden"
+            style={{ background: "rgba(255,255,255,0.08)" }}
+          >
+            <motion.div
+              className="h-full rounded-full"
+              style={{
+                width: `${progress}%`,
+                background: "linear-gradient(90deg, #30D158, #34d399)",
+                boxShadow: "0 0 10px rgba(48,209,88,0.4)",
+                transition: "width 0.1s ease-out",
+              }}
+            />
+          </div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </motion.div>
   );
 }
