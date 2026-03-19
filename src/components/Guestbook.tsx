@@ -20,6 +20,7 @@ export default function Guestbook() {
   const [selectedEmoji, setSelectedEmoji] = useState("👋");
   const [sending, setSending] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [confetti, setConfetti] = useState<{ id: number; x: number; color: string; delay: number }[]>([]);
 
   const fetchMessages = useCallback(async () => {
     const { data } = await supabase
@@ -68,6 +69,16 @@ export default function Guestbook() {
 
     if (!error) {
       setText("");
+      // Confetti burst!
+      const colors = ["#ff6b6b", "#ffd43b", "#51cf66", "#339af0", "#845ef7", "#f06595"];
+      const particles = Array.from({ length: 12 }, (_, i) => ({
+        id: Date.now() + i,
+        x: 20 + Math.random() * 60,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        delay: Math.random() * 0.3,
+      }));
+      setConfetti(particles);
+      setTimeout(() => setConfetti([]), 1200);
     }
     setSending(false);
   };
@@ -84,7 +95,26 @@ export default function Guestbook() {
   };
 
   return (
-    <div>
+    <div className="relative">
+      {/* Confetti */}
+      {confetti.map((c) => (
+        <div
+          key={c.id}
+          className="absolute pointer-events-none"
+          style={{
+            left: `${c.x}%`,
+            top: 0,
+            width: 6,
+            height: 6,
+            borderRadius: 2,
+            background: c.color,
+            animation: `confetti-fall 1s ease-in forwards`,
+            animationDelay: `${c.delay}s`,
+            zIndex: 50,
+          }}
+        />
+      ))}
+
       {/* Status */}
       <div className="mb-3 px-1">
         <span className="text-[11px] text-white/25">

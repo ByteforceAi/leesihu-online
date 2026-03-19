@@ -102,10 +102,9 @@ export default function HomePage() {
                     <div className="absolute bottom-0 left-0 right-0 px-5 pb-5 max-w-[600px] mx-auto">
                       <div className="flex items-end gap-4">
                         <div
-                          className="w-[64px] h-[64px] rounded-[16px] flex items-center justify-center flex-shrink-0"
+                          className="w-[64px] h-[64px] rounded-[16px] flex items-center justify-center flex-shrink-0 avatar-glow"
                           style={{
                             background: "linear-gradient(135deg, #30D158 0%, #0EA5E9 100%)",
-                            boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
                           }}
                         >
                           <span className="text-[24px] font-bold text-white">L</span>
