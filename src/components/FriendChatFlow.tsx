@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { playFriendAdd } from "../lib/sounds";
@@ -7,68 +7,137 @@ interface Message {
   id: number;
   role: "bot" | "user";
   text: string;
+  typewriter?: boolean;
 }
 
 interface Props {
   onClose: () => void;
 }
 
+type NpcEmotion = "default" | "thinking" | "happy" | "heart";
+
+const KAOMOJI: Record<NpcEmotion, string> = {
+  default: "(◕‿◕)",
+  thinking: "(◠_◠)",
+  happy: "(≧◡≦)",
+  heart: "(♡ᴗ♡)",
+};
+
+/* ── TypewriterText ─────────────────────────────────────── */
+function TypewriterText({ text, onDone }: { text: string; onDone?: () => void }) {
+  const [displayed, setDisplayed] = useState("");
+  const idx = useRef(0);
+
+  useEffect(() => {
+    idx.current = 0;
+    setDisplayed("");
+
+    const timer = setInterval(() => {
+      idx.current++;
+      if (idx.current >= text.length) {
+        setDisplayed(text);
+        clearInterval(timer);
+        onDone?.();
+      } else {
+        setDisplayed(text.slice(0, idx.current));
+      }
+    }, 25);
+
+    return () => clearInterval(timer);
+  }, [text, onDone]);
+
+  return <>{displayed}</>;
+}
+
+/* ── NPC Avatar ─────────────────────────────────────────── */
+function NpcAvatar({ emotion, size = "sm" }: { emotion: NpcEmotion; size?: "sm" | "header" }) {
+  const dim = size === "header" ? "w-8 h-8" : "w-7 h-7";
+  const textSize = size === "header" ? "text-[9px]" : "text-[8px]";
+
+  return (
+    <motion.div
+      key={emotion}
+      initial={{ scale: 0.7 }}
+      animate={{ scale: 1 }}
+      transition={{ type: "spring", stiffness: 400, damping: 12 }}
+      className={`${dim} rounded-full bg-gradient-to-br from-[#30D158] to-[#0EA5E9] flex items-center justify-center flex-shrink-0`}
+    >
+      <span className={`${textSize} leading-none select-none`}>{KAOMOJI[emotion]}</span>
+    </motion.div>
+  );
+}
+
+/* ── Main Component ─────────────────────────────────────── */
 export default function FriendChatFlow({ onClose }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [step, setStep] = useState(0); // 0=intro, 1=name, 2=phone, 3=done
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const [name, setName] = useState("");
+  const [emotion, setEmotion] = useState<NpcEmotion>("default");
   const phone = useRef("");
   const [confetti, setConfetti] = useState(false);
+  const [showHearts, setShowHearts] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const msgId = useRef(0);
 
-  const scroll = () => {
+  const scroll = useCallback(() => {
     setTimeout(() => {
       scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
     }, 50);
-  };
+  }, []);
 
-  const addBot = (text: string, delay = 800) => {
-    setTyping(true);
-    scroll();
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        msgId.current++;
-        setMessages((prev) => [...prev, { id: msgId.current, role: "bot", text }]);
-        setTyping(false);
-        scroll();
-        resolve();
-      }, delay);
-    });
-  };
+  const addBot = useCallback(
+    (text: string, delay = 800) => {
+      setTyping(true);
+      setEmotion("thinking");
+      scroll();
+      return new Promise<void>((resolve) => {
+        setTimeout(() => {
+          msgId.current++;
+          setMessages((prev) => [...prev, { id: msgId.current, role: "bot", text, typewriter: true }]);
+          setTyping(false);
+          scroll();
+          resolve();
+        }, delay);
+      });
+    },
+    [scroll],
+  );
 
-  const addUser = (text: string) => {
-    msgId.current++;
-    setMessages((prev) => [...prev, { id: msgId.current, role: "user", text }]);
-    scroll();
-  };
+  const addUser = useCallback(
+    (text: string) => {
+      msgId.current++;
+      setMessages((prev) => [...prev, { id: msgId.current, role: "user", text }]);
+      scroll();
+    },
+    [scroll],
+  );
 
   // Step 0: Introduction
   useEffect(() => {
     const run = async () => {
       await addBot("안녕! 나는 시후봇이야 👋", 600);
+      setEmotion("default");
       await addBot("시후와 친구가 되고 싶어?", 800);
+      setEmotion("default");
     };
     run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleChoice = async (choice: boolean) => {
     if (!choice) {
       addUser("아니요");
       await addBot("괜찮아! 다음에 또 와줘 😊", 600);
+      setEmotion("default");
       setTimeout(onClose, 1500);
       return;
     }
     addUser("네! 😄");
     await addBot("좋아! 이름을 알려줘!", 700);
+    setEmotion("default");
     setStep(1);
     setTimeout(() => inputRef.current?.focus(), 100);
   };
@@ -82,8 +151,11 @@ export default function FriendChatFlow({ onClose }: Props) {
       // Name step
       setName(value);
       addUser(value);
+      setEmotion("happy");
       await addBot(`${value}! 멋진 이름이다! 💙`, 600);
+      setEmotion("default");
       await addBot("연락처를 남겨주면 시후가 연락할게! 📱", 800);
+      setEmotion("default");
       setStep(2);
       setTimeout(() => inputRef.current?.focus(), 100);
     } else if (step === 2) {
@@ -100,11 +172,15 @@ export default function FriendChatFlow({ onClose }: Props) {
           message: `친구추가 — ${value}`,
           emoji: "🤝",
         });
-      } catch { /* silent */ }
+      } catch {
+        /* silent */
+      }
 
       setStep(3);
+      setEmotion("heart");
       playFriendAdd();
       setConfetti(true);
+      setShowHearts(true);
       await addBot(`친구추가 완료! 🎉\n${name}님을 환영해!`, 500);
       await addBot("시후가 곧 연락할 거야! 기다려줘 ✨", 800);
       setTimeout(onClose, 3000);
@@ -130,9 +206,7 @@ export default function FriendChatFlow({ onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/6">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#30D158] to-[#0EA5E9] flex items-center justify-center">
-              <span className="text-sm">🤖</span>
-            </div>
+            <NpcAvatar emotion={emotion} size="header" />
             <div>
               <p className="text-[14px] font-semibold text-white">시후봇</p>
               <p className="text-[10px] text-[#30D158]">● 온라인</p>
@@ -155,8 +229,8 @@ export default function FriendChatFlow({ onClose }: Props) {
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 {msg.role === "bot" && (
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#30D158] to-[#0EA5E9] flex items-center justify-center flex-shrink-0 mr-2 mt-1">
-                    <span className="text-xs">🤖</span>
+                  <div className="mr-2 mt-1">
+                    <NpcAvatar emotion={emotion} />
                   </div>
                 )}
                 <div
@@ -167,7 +241,11 @@ export default function FriendChatFlow({ onClose }: Props) {
                     borderRadius: msg.role === "user" ? "20px 20px 4px 20px" : "20px 20px 20px 4px",
                   }}
                 >
-                  {msg.text}
+                  {msg.role === "bot" && msg.typewriter ? (
+                    <TypewriterText text={msg.text} onDone={scroll} />
+                  ) : (
+                    msg.text
+                  )}
                 </div>
               </motion.div>
             ))}
@@ -176,9 +254,7 @@ export default function FriendChatFlow({ onClose }: Props) {
           {/* Typing indicator */}
           {typing && (
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#30D158] to-[#0EA5E9] flex items-center justify-center">
-                <span className="text-xs">🤖</span>
-              </div>
+              <NpcAvatar emotion="thinking" />
               <div className="px-4 py-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.08)" }}>
                 <div className="flex gap-1">
                   {[0, 1, 2].map((i) => (
@@ -234,12 +310,55 @@ export default function FriendChatFlow({ onClose }: Props) {
                   width: 8,
                   height: 8,
                   borderRadius: Math.random() > 0.5 ? "50%" : "2px",
-                  background: ["#ff6b6b","#ffd43b","#51cf66","#339af0","#845ef7","#f06595"][i % 6],
+                  background: ["#ff6b6b", "#ffd43b", "#51cf66", "#339af0", "#845ef7", "#f06595"][i % 6],
                   animation: "confetti-fall 1.5s ease-in forwards",
                   animationDelay: `${Math.random() * 0.5}s`,
                 }}
               />
             ))}
+          </div>
+        )}
+
+        {/* Floating hearts */}
+        {showHearts && (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="absolute text-lg"
+                style={{
+                  left: `${35 + i * 15}%`,
+                  bottom: "30%",
+                  animation: "float-heart 2s ease-out forwards",
+                  animationDelay: `${i * 0.3}s`,
+                  opacity: 0,
+                }}
+              >
+                ❤️
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Success checkmark */}
+        {step === 3 && (
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: [0, 1.2, 1], opacity: [0, 1, 1] }}
+              transition={{ duration: 0.6, times: [0, 0.6, 1], ease: "easeOut", delay: 0.3 }}
+              className="w-20 h-20 rounded-full flex items-center justify-center"
+              style={{ background: "rgba(48,209,88,0.15)" }}
+            >
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: [0, 1.3, 1] }}
+                transition={{ duration: 0.5, times: [0, 0.6, 1], delay: 0.5 }}
+                className="text-4xl"
+              >
+                ✓
+              </motion.span>
+            </motion.div>
           </div>
         )}
 

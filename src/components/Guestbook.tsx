@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send } from "lucide-react";
+import { Send, Check } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 interface Message {
@@ -19,6 +19,7 @@ export default function Guestbook() {
   const [text, setText] = useState("");
   const [selectedEmoji, setSelectedEmoji] = useState("👋");
   const [sending, setSending] = useState(false);
+  const [sendSuccess, setSendSuccess] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [confetti, setConfetti] = useState<{ id: number; x: number; color: string; delay: number }[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -44,6 +45,13 @@ export default function Guestbook() {
     return () => { supabase.removeChannel(channel); };
   }, [fetchMessages]);
 
+  // Auto-scroll to top when new messages arrive (newest first)
+  useEffect(() => {
+    if (scrollRef.current && messages.length > 0) {
+      scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [messages]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !text.trim() || sending) return;
@@ -55,6 +63,9 @@ export default function Guestbook() {
     });
     if (!error) {
       setText("");
+      // Show success checkmark
+      setSendSuccess(true);
+      setTimeout(() => setSendSuccess(false), 800);
       const colors = ["#ff6b6b", "#ffd43b", "#51cf66", "#339af0", "#845ef7", "#f06595"];
       const particles = Array.from({ length: 12 }, (_, i) => ({
         id: Date.now() + i,
@@ -164,7 +175,7 @@ export default function Guestbook() {
                 key={e}
                 type="button"
                 onClick={() => setSelectedEmoji(e)}
-                whileTap={{ scale: 0.85 }}
+                whileTap={{ scale: 1.3, transition: { duration: 0.1, type: "spring", stiffness: 500 } }}
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-[15px] cursor-pointer transition-all
                   ${selectedEmoji === e
                     ? "bg-white/12 ring-1 ring-white/20 scale-110"
@@ -201,10 +212,37 @@ export default function Guestbook() {
                 whileTap={{ scale: 0.85 }}
                 className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer disabled:opacity-20 ml-1"
                 style={{
-                  background: name.trim() && text.trim() ? "#0A84FF" : "transparent",
+                  background: sendSuccess
+                    ? "#30D158"
+                    : name.trim() && text.trim()
+                      ? "#0A84FF"
+                      : "transparent",
+                  transition: "background 0.2s ease",
                 }}
               >
-                <Send className="w-3.5 h-3.5" style={{ color: name.trim() && text.trim() ? "#fff" : "rgba(255,255,255,0.2)" }} />
+                <AnimatePresence mode="wait">
+                  {sendSuccess ? (
+                    <motion.span
+                      key="check"
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <Check className="w-3.5 h-3.5 text-white" />
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="send"
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <Send className="w-3.5 h-3.5" style={{ color: name.trim() && text.trim() ? "#fff" : "rgba(255,255,255,0.2)" }} />
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </motion.button>
             </div>
           </div>

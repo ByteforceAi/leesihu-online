@@ -15,6 +15,15 @@ import { playTabSwitch, playButtonClick } from "../lib/sounds";
 
 type Tab = "home" | "timeline" | "guestbook";
 
+/* ─── Tab transition variants ─── */
+const tabVariants = {
+  initial: { opacity: 0, filter: "blur(8px)", scale: 0.97 },
+  animate: { opacity: 1, filter: "blur(0px)", scale: 1 },
+  exit: { opacity: 0, filter: "blur(4px)", scale: 1.02 },
+};
+
+const tabTransition = { duration: 0.3 };
+
 /* ─── App Icon Component ─── */
 function AppIcon({
   icon,
@@ -24,6 +33,7 @@ function AppIcon({
   badge,
   delay = 0,
   jiggling = false,
+  index = 0,
 }: {
   icon: string;
   label: string;
@@ -32,6 +42,7 @@ function AppIcon({
   badge?: string;
   delay?: number;
   jiggling?: boolean;
+  index?: number;
 }) {
   const [pressed, setPressed] = useState(false);
   const [ripple, setRipple] = useState(false);
@@ -67,6 +78,10 @@ function AppIcon({
       transition={{ delay, type: "spring", stiffness: 300, damping: 20 }}
       onClick={handleTap}
       className={`flex flex-col items-center gap-1.5 cursor-pointer relative ${jiggling ? "jiggle" : ""}`}
+      style={{
+        animation: jiggling ? undefined : "float-idle 3s ease-in-out infinite",
+        animationDelay: `${index * 0.15}s`,
+      }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
@@ -111,6 +126,21 @@ function AppIcon({
     </motion.button>
   );
 }
+
+/* ─── Letter stagger for title ─── */
+const letterContainerVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.05,
+    },
+  },
+};
+
+const letterVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+};
 
 /* ═══════════════════════════════════════ */
 
@@ -198,26 +228,35 @@ export default function HomePage() {
               {activeTab === "home" && (
                 <motion.div
                   key="home"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
+                  variants={tabVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={tabTransition}
                 >
                   {/* Parallax Hero with Minecraft particles */}
                   <div className="relative w-full aspect-[16/9] max-h-[400px] overflow-hidden">
                     <MinecraftParticles />
-                    <motion.img
-                      src="/assets/bg.png"
-                      alt=""
-                      className="absolute inset-0 w-full h-full object-cover"
-                      style={{
-                        filter: "brightness(0.65) saturate(1.3)",
-                        y: heroY,
-                        scale: heroScale,
-                        opacity: heroOpacity,
-                      }}
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                    />
+                    {/* Cinematic entrance wrapper */}
+                    <motion.div
+                      className="absolute inset-0"
+                      initial={{ filter: "blur(15px)", scale: 1.08 }}
+                      animate={{ filter: "blur(0px)", scale: 1 }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
+                    >
+                      <motion.img
+                        src="/assets/bg.png"
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover"
+                        style={{
+                          filter: "brightness(0.65) saturate(1.3)",
+                          y: heroY,
+                          scale: heroScale,
+                          opacity: heroOpacity,
+                        }}
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      />
+                    </motion.div>
                     <div
                       className="absolute inset-0"
                       style={{
@@ -227,7 +266,18 @@ export default function HomePage() {
                     {/* Profile */}
                     <div className="absolute bottom-0 left-0 right-0 px-5 pb-5 max-w-[600px] mx-auto">
                       <h1 className="text-[28px] font-bold leading-tight mb-1">
-                        <span className="text-shimmer">LEESIHU</span>
+                        <motion.span
+                          className="text-shimmer inline-flex"
+                          variants={letterContainerVariants}
+                          initial="hidden"
+                          animate="visible"
+                        >
+                          {"LEESIHU".split("").map((char, i) => (
+                            <motion.span key={i} variants={letterVariants}>
+                              {char}
+                            </motion.span>
+                          ))}
+                        </motion.span>
                         <span className="text-white/25">.ONLINE</span>
                       </h1>
                       <p className="text-[13px] text-white/45 mb-3">Game Creator</p>
@@ -276,6 +326,7 @@ export default function HomePage() {
                           onClick={() => handleServerTap(server)}
                           delay={0.1 + i * 0.08}
                           jiggling={jiggleMode}
+                          index={i}
                         />
                       ))}
                       <AppIcon
@@ -285,6 +336,7 @@ export default function HomePage() {
                         onClick={() => setActiveTab("guestbook")}
                         delay={0.26}
                         jiggling={jiggleMode}
+                        index={SITE_CONFIG.servers.length}
                       />
                       <AppIcon
                         icon="📅"
@@ -293,6 +345,7 @@ export default function HomePage() {
                         onClick={() => setActiveTab("timeline")}
                         delay={0.34}
                         jiggling={jiggleMode}
+                        index={SITE_CONFIG.servers.length + 1}
                       />
                       <AppIcon
                         icon="🤝"
@@ -302,6 +355,7 @@ export default function HomePage() {
                         badge="N"
                         delay={0.42}
                         jiggling={jiggleMode}
+                        index={SITE_CONFIG.servers.length + 2}
                       />
                       <AppIcon
                         icon={isPlaying ? "⏸️" : "🎵"}
@@ -312,6 +366,7 @@ export default function HomePage() {
                         onClick={toggleMusic}
                         delay={0.5}
                         jiggling={jiggleMode}
+                        index={SITE_CONFIG.servers.length + 3}
                       />
                     </div>
 
@@ -325,10 +380,11 @@ export default function HomePage() {
               {activeTab === "timeline" && (
                 <motion.div
                   key="timeline"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.25 }}
+                  variants={tabVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={tabTransition}
                   className="max-w-[600px] mx-auto px-5 pt-4 pb-28"
                 >
                   <button
@@ -346,10 +402,11 @@ export default function HomePage() {
               {activeTab === "guestbook" && (
                 <motion.div
                   key="guestbook"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.25 }}
+                  variants={tabVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={tabTransition}
                   className="max-w-[600px] mx-auto px-5 pt-4 pb-28"
                 >
                   <button

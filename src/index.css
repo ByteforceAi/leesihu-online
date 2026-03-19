@@ -53,10 +53,51 @@
   100% { transform: scale(4); opacity: 0; }
 }
 
+/* ═══ App Icon Idle Float ═══ */
+@keyframes float-idle {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+}
+
 /* ═══ Confetti ═══ */
 @keyframes confetti-fall {
   0% { transform: translateY(0) rotate(0deg); opacity: 1; }
   100% { transform: translateY(120px) rotate(720deg); opacity: 0; }
+}
+
+/* ═══ Floating Hearts (FriendChatFlow) ═══ */
+@keyframes float-heart {
+  0% { transform: translateY(0) scale(0.5); opacity: 0; }
+  15% { opacity: 1; transform: translateY(-10px) scale(1); }
+  100% { transform: translateY(-120px) scale(0.6); opacity: 0; }
+}
+
+/* ═══ Timeline Pulse ═══ */
+@keyframes timeline-dot-pulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(48,209,88,0.3); }
+  50% { box-shadow: 0 0 18px rgba(48,209,88,0.6), 0 0 6px rgba(48,209,88,0.3); }
+}
+.timeline-pulse {
+  animation: timeline-dot-pulse 2s ease-in-out infinite;
+}
+
+/* ═══ Timeline Item Hover Glow ═══ */
+.timeline-item {
+  border-left: 2px solid transparent;
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+.timeline-item:hover {
+  border-left-color: #30D158;
+  background: rgba(48,209,88,0.04) !important;
+}
+
+/* ═══ Timeline NOW badge ping ═══ */
+@keyframes now-ping {
+  0% { transform: scale(1); opacity: 0.4; }
+  75%, 100% { transform: scale(1.8); opacity: 0; }
+}
+.timeline-now-ping {
+  animation: now-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
 /* ═══ Premium Tab Bar ═══ */
