@@ -13,7 +13,25 @@ const serverIcons: Record<string, React.ReactNode> = {
   simulator: <Cpu className="w-5 h-5" />,
 };
 
-const spring = { type: "spring" as const, stiffness: 300, damping: 30 };
+// iOS card style
+const glassCard = {
+  background: "rgba(255,255,255,0.12)",
+  backdropFilter: "blur(60px) saturate(180%)",
+  WebkitBackdropFilter: "blur(60px) saturate(180%)",
+  border: "1px solid rgba(255,255,255,0.18)",
+  borderRadius: "20px",
+  boxShadow: "0 2px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.08)",
+} as const;
+
+// iOS section card (grouped items, like Settings)
+const sectionCard = {
+  background: "rgba(255,255,255,0.10)",
+  backdropFilter: "blur(60px) saturate(180%)",
+  WebkitBackdropFilter: "blur(60px) saturate(180%)",
+  border: "1px solid rgba(255,255,255,0.14)",
+  borderRadius: "16px",
+  overflow: "hidden" as const,
+} as const;
 
 export default function HomePage() {
   const [booting, setBooting] = useState(true);
@@ -36,35 +54,26 @@ export default function HomePage() {
 
   return (
     <div className="relative w-full h-full overflow-hidden select-none">
-      {/* ─── Background ─── */}
+      {/* ─── Background: heavily blurred wallpaper ─── */}
       <div className="fixed inset-0 z-0">
-        {/* Minecraft background image — visible! */}
         <img
           src="/assets/bg.png"
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
           style={{
-            filter: "brightness(0.4) saturate(1.3)",
-            transform: "scale(1.02)",
+            filter: "brightness(0.5) saturate(1.2) blur(20px)",
+            transform: "scale(1.1)",
           }}
           onError={(e) => {
             (e.target as HTMLImageElement).style.display = "none";
           }}
         />
-        {/* Gradient vignette — cinematic */}
+        {/* Dark overlay for readability */}
         <div
           className="absolute inset-0"
           style={{
-            background: `
-              radial-gradient(ellipse 80% 60% at 50% 40%, transparent 0%, rgba(0,0,0,0.5) 100%),
-              linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 30%, rgba(0,0,0,0.6) 100%)
-            `,
+            background: "linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.4) 100%)",
           }}
-        />
-        {/* Soft blur overlay for content readability */}
-        <div
-          className="absolute inset-0"
-          style={{ backdropFilter: "blur(2px)" }}
         />
       </div>
 
@@ -73,85 +82,71 @@ export default function HomePage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
           className="relative z-10 w-full h-full overflow-y-auto flex justify-center"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
-          <div className="w-full max-w-[560px] px-6 pt-14 pb-28 md:pt-20">
+          <div className="w-full max-w-[480px] px-5 pt-12 pb-28 md:pt-16">
 
-            {/* ─── Profile Header ─── */}
+            {/* ═══════ Profile Card ═══════ */}
             <motion.div
-              initial={{ opacity: 0, y: -15 }}
+              initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: [0.2, 0.8, 0.2, 1] }}
-              className="text-center mb-8"
+              transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
+              className="p-6 mb-5"
+              style={glassCard}
             >
-              {/* Avatar */}
-              <div className="relative w-[72px] h-[72px] mx-auto mb-4">
+              <div className="flex flex-col items-center">
+                {/* Avatar */}
                 <div
-                  className="w-full h-full rounded-[20px] flex items-center justify-center"
+                  className="w-[68px] h-[68px] rounded-[18px] flex items-center justify-center mb-3"
                   style={{
                     background: "linear-gradient(135deg, #30D158 0%, #0EA5E9 100%)",
-                    boxShadow: "0 8px 24px rgba(48,209,88,0.25), 0 2px 8px rgba(0,0,0,0.3)",
+                    boxShadow: "0 6px 20px rgba(48,209,88,0.3)",
                   }}
                 >
-                  <span className="text-[28px] font-bold text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
-                    L
-                  </span>
+                  <span className="text-[26px] font-bold text-white">L</span>
                 </div>
+
+                <h1 className="text-[20px] font-bold tracking-[0.5px] text-white mb-0.5">
+                  LEESIHU<span className="text-white/30">.ONLINE</span>
+                </h1>
+                <p className="text-[13px] text-white/40 mb-3">
+                  Game Creator & Music Producer
+                </p>
+
+                <VisitorCount />
               </div>
-
-              <h1 className="text-[22px] font-bold tracking-[0.5px] mb-0.5 text-white">
-                LEESIHU<span className="text-white/30">.ONLINE</span>
-              </h1>
-              <p className="text-[13px] text-white/35 tracking-wide mb-4">
-                Game Creator & Music Producer
-              </p>
-
-              {/* Visitor count pill */}
-              <VisitorCount />
             </motion.div>
 
-            {/* ─── Play Section ─── */}
+            {/* ═══════ Play Section ═══════ */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-              className="mb-6"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.5 }}
+              className="mb-5"
             >
-              <div className="flex items-center gap-2 mb-3 px-1">
-                <h2 className="text-[15px] font-semibold text-white/90">플레이</h2>
-                <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
-              </div>
-
-              <div className="space-y-2.5">
+              <p className="text-[13px] font-medium text-white/40 uppercase tracking-wider mb-2 px-2">
+                플레이
+              </p>
+              <div style={sectionCard}>
                 {SITE_CONFIG.servers.map((server, index) => {
                   const isLoading = loadingId === server.id;
+                  const isLast = index === SITE_CONFIG.servers.length - 1;
                   return (
-                    <motion.button
+                    <button
                       key={server.id}
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.25 + index * 0.08, ...spring }}
                       onClick={() => handleCardTap(server)}
                       disabled={server.disabled || isLoading}
-                      className="group w-full rounded-2xl text-left cursor-pointer
-                        active:scale-[0.97] transition-transform duration-150"
-                      style={{
-                        background: "rgba(255,255,255,0.06)",
-                        backdropFilter: "blur(40px) saturate(160%)",
-                        WebkitBackdropFilter: "blur(40px) saturate(160%)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        boxShadow: "0 1px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04)",
-                      }}
+                      className="w-full text-left cursor-pointer active:bg-white/8 transition-colors duration-100"
                     >
-                      <div className="flex items-center gap-3.5 p-3.5">
+                      <div className="flex items-center gap-3 px-4 py-3">
                         {/* Icon */}
                         <div
-                          className="w-11 h-11 rounded-[13px] flex items-center justify-center flex-shrink-0"
+                          className="w-10 h-10 rounded-[11px] flex items-center justify-center flex-shrink-0"
                           style={{
                             background: server.gradient,
-                            boxShadow: `0 4px 12px ${server.id === "game" ? "rgba(48,209,88,0.25)" : "rgba(14,165,233,0.25)"}`,
+                            boxShadow: `0 3px 10px ${server.id === "game" ? "rgba(48,209,88,0.3)" : "rgba(14,165,233,0.3)"}`,
                           }}
                         >
                           <div className="text-white">{serverIcons[server.id]}</div>
@@ -159,32 +154,30 @@ export default function HomePage() {
 
                         {/* Text */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <h3 className="text-[15px] font-semibold text-white tracking-[0.3px]">
-                              {server.name}
-                            </h3>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-[15px] font-semibold text-white">{server.name}</h3>
                             <div className="flex items-center gap-1">
                               <div className="w-[5px] h-[5px] rounded-full bg-[#30D158]" />
-                              <span className="text-[10px] text-[#30D158]/70 font-medium">ONLINE</span>
+                              <span className="text-[10px] text-[#30D158] font-medium">ONLINE</span>
                             </div>
                           </div>
                           <p className="text-[12px] text-white/35 truncate">{server.description}</p>
                         </div>
 
-                        {/* Arrow */}
-                        <div className="flex-shrink-0 pr-1">
+                        {/* Arrow or loader */}
+                        <div className="flex-shrink-0">
                           {isLoading ? (
-                            <Loader2 className="w-[18px] h-[18px] text-white/25 animate-spin" />
+                            <Loader2 className="w-[18px] h-[18px] text-white/30 animate-spin" />
                           ) : (
-                            <ChevronRight className="w-[18px] h-[18px] text-white/15 group-hover:text-white/35 transition-colors" />
+                            <ChevronRight className="w-[18px] h-[18px] text-white/20" />
                           )}
                         </div>
                       </div>
 
-                      {/* Loading progress */}
+                      {/* Loading bar */}
                       {isLoading && (
-                        <div className="px-3.5 pb-3">
-                          <div className="h-[2px] rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.04)" }}>
+                        <div className="px-4 pb-3">
+                          <div className="h-[2px] rounded-full overflow-hidden bg-white/5">
                             <motion.div
                               initial={{ width: "0%" }}
                               animate={{ width: "100%" }}
@@ -195,45 +188,54 @@ export default function HomePage() {
                           </div>
                         </div>
                       )}
-                    </motion.button>
+
+                      {/* iOS divider between items */}
+                      {!isLast && (
+                        <div className="ml-[68px] mr-4">
+                          <div className="h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
+                        </div>
+                      )}
+                    </button>
                   );
                 })}
               </div>
             </motion.div>
 
-            {/* ─── Timeline ─── */}
+            {/* ═══════ Timeline Section ═══════ */}
             <motion.div
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
+              viewport={{ once: true, margin: "-30px" }}
               transition={{ duration: 0.5 }}
-              className="mb-6"
+              className="mb-5"
             >
-              <div className="flex items-center gap-2 mb-3 px-1">
-                <h2 className="text-[15px] font-semibold text-white/90">타임라인</h2>
-                <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+              <p className="text-[13px] font-medium text-white/40 uppercase tracking-wider mb-2 px-2">
+                타임라인
+              </p>
+              <div className="p-4" style={sectionCard}>
+                <Timeline />
               </div>
-              <Timeline />
             </motion.div>
 
-            {/* ─── Guestbook ─── */}
+            {/* ═══════ Guestbook Section ═══════ */}
             <motion.div
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
+              viewport={{ once: true, margin: "-30px" }}
               transition={{ duration: 0.5 }}
-              className="mb-8"
+              className="mb-5"
             >
-              <div className="flex items-center gap-2 mb-3 px-1">
-                <h2 className="text-[15px] font-semibold text-white/90">방명록</h2>
-                <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+              <p className="text-[13px] font-medium text-white/40 uppercase tracking-wider mb-2 px-2">
+                방명록
+              </p>
+              <div className="p-4" style={sectionCard}>
+                <Guestbook />
               </div>
-              <Guestbook />
             </motion.div>
 
-            {/* ─── Footer ─── */}
+            {/* ═══════ Footer ═══════ */}
             <div className="text-center pt-4 pb-8">
-              <p className="text-[10px] text-white/12 tracking-wider">
+              <p className="text-[11px] text-white/15">
                 leesihu.online — 이시후월드
               </p>
             </div>
