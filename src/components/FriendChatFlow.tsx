@@ -41,7 +41,7 @@ function TypewriterText({ text, onDone }: { text: string; onDone?: () => void })
       } else {
         setDisplayed(text.slice(0, idx.current));
       }
-    }, 25);
+    }, 15);
 
     return () => clearInterval(timer);
   }, [text, onDone]);
@@ -51,8 +51,8 @@ function TypewriterText({ text, onDone }: { text: string; onDone?: () => void })
 
 /* ── NPC Avatar ─────────────────────────────────────────── */
 function NpcAvatar({ emotion, size = "sm" }: { emotion: NpcEmotion; size?: "sm" | "header" }) {
-  const dim = size === "header" ? "w-8 h-8" : "w-7 h-7";
-  const textSize = size === "header" ? "text-[9px]" : "text-[8px]";
+  const dim = size === "header" ? "w-10 h-10" : "w-9 h-9";
+  const textSize = size === "header" ? "text-[11px]" : "text-[10px]";
 
   return (
     <motion.div
@@ -89,7 +89,7 @@ export default function FriendChatFlow({ onClose }: Props) {
   }, []);
 
   const addBot = useCallback(
-    (text: string, delay = 800) => {
+    (text: string, delay = 500) => {
       setTyping(true);
       setEmotion("thinking");
       scroll();
@@ -234,9 +234,9 @@ export default function FriendChatFlow({ onClose }: Props) {
                   </div>
                 )}
                 <div
-                  className="max-w-[75%] px-4 py-2.5 text-[14px] leading-relaxed whitespace-pre-line"
+                  className="max-w-[75%] px-4 py-2.5 text-[15px] leading-relaxed whitespace-pre-line"
                   style={{
-                    background: msg.role === "user" ? "#0A84FF" : "rgba(255,255,255,0.08)",
+                    background: msg.role === "user" ? "#0A84FF" : "rgba(255,255,255,0.12)",
                     color: msg.role === "user" ? "#fff" : "rgba(255,255,255,0.85)",
                     borderRadius: msg.role === "user" ? "20px 20px 4px 20px" : "20px 20px 20px 4px",
                   }}
@@ -255,7 +255,7 @@ export default function FriendChatFlow({ onClose }: Props) {
           {typing && (
             <div className="flex items-center gap-2">
               <NpcAvatar emotion="thinking" />
-              <div className="px-4 py-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.08)" }}>
+              <div className="px-4 py-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.12)" }}>
                 <div className="flex gap-1">
                   {[0, 1, 2].map((i) => (
                     <motion.div
@@ -288,7 +288,7 @@ export default function FriendChatFlow({ onClose }: Props) {
               <motion.button
                 whileTap={{ scale: 0.93 }}
                 onClick={() => handleChoice(false)}
-                className="px-5 py-2.5 rounded-full text-[14px] font-medium cursor-pointer"
+                className="px-5 py-2.5 rounded-full text-[14px] font-medium cursor-pointer border-2 border-white/15"
                 style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}
               >
                 다음에요
@@ -300,7 +300,7 @@ export default function FriendChatFlow({ onClose }: Props) {
         {/* Confetti */}
         {confetti && (
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {Array.from({ length: 20 }).map((_, i) => (
+            {Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={i}
                 className="absolute"
@@ -379,7 +379,7 @@ export default function FriendChatFlow({ onClose }: Props) {
                 placeholder={step === 1 ? "이름을 입력해줘" : "010-0000-0000"}
                 maxLength={step === 1 ? 20 : 13}
                 autoFocus
-                className="flex-1 px-4 py-3 rounded-full text-[14px] text-white placeholder-white/20 outline-none"
+                className="flex-1 px-4 py-3.5 rounded-full text-[14px] text-white placeholder-white/35 outline-none"
                 style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}
               />
               <motion.button

@@ -132,7 +132,7 @@ export default function ChatBot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.25, ease: [0.2, 0.8, 0.2, 1] }}
-            className="fixed bottom-[76px] right-4 z-50 w-[320px] max-w-[calc(100vw-32px)] rounded-2xl overflow-hidden flex flex-col"
+            className="fixed bottom-[76px] right-4 z-50 w-[340px] max-w-[calc(100vw-32px)] rounded-2xl overflow-hidden flex flex-col"
             style={{
               height: "min(420px, calc(100vh - 120px))",
               background: "rgba(20,20,20,0.95)",
@@ -149,7 +149,7 @@ export default function ChatBot() {
                 </div>
                 <div>
                   <p className="text-[14px] font-semibold text-white">{BOT_NAME}</p>
-                  <p className="text-[10px] text-white/30">온라인</p>
+                  <p className="text-[10px] text-white/30">항상 응답 가능</p>
                 </div>
               </div>
               <button onClick={() => setIsOpen(false)} className="p-1 cursor-pointer">
@@ -168,14 +168,14 @@ export default function ChatBot() {
                   className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   {msg.role === "bot" && (
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#0EA5E9] to-[#6366F1] flex items-center justify-center flex-shrink-0 mt-1">
-                      <Bot className="w-3 h-3 text-white" />
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0EA5E9] to-[#6366F1] flex items-center justify-center flex-shrink-0 mt-1">
+                      <Bot className="w-4 h-4 text-white" />
                     </div>
                   )}
                   <div
-                    className="max-w-[75%] px-3 py-2 rounded-2xl text-[13px] leading-relaxed"
+                    className="max-w-[75%] px-3 py-2 rounded-2xl text-[14px] leading-relaxed"
                     style={{
-                      background: msg.role === "user" ? "#0A84FF" : "rgba(255,255,255,0.08)",
+                      background: msg.role === "user" ? "#0A84FF" : "rgba(255,255,255,0.12)",
                       color: msg.role === "user" ? "#fff" : "rgba(255,255,255,0.8)",
                       borderBottomRightRadius: msg.role === "user" ? 4 : 16,
                       borderBottomLeftRadius: msg.role === "bot" ? 4 : 16,
@@ -194,15 +194,15 @@ export default function ChatBot() {
               {/* Typing indicator */}
               {isTyping && (
                 <div className="flex gap-2">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#0EA5E9] to-[#6366F1] flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-3 h-3 text-white" />
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0EA5E9] to-[#6366F1] flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-4 h-4 text-white" />
                   </div>
-                  <div className="px-4 py-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.08)" }}>
+                  <div className="px-4 py-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.12)" }}>
                     <div className="flex gap-1">
                       {[0, 1, 2].map((i) => (
                         <motion.div
                           key={i}
-                          className="w-[5px] h-[5px] rounded-full bg-white/30"
+                          className="w-[6px] h-[6px] rounded-full bg-white/30"
                           animate={{ opacity: [0.3, 1, 0.3] }}
                           transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
                         />
@@ -222,8 +222,8 @@ export default function ChatBot() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
                   placeholder="메시지를 입력하세요..."
-                  className="flex-1 px-3 py-2.5 rounded-xl text-[13px] text-white placeholder-white/20 outline-none"
-                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.06)" }}
+                  className="flex-1 px-3 py-2.5 rounded-xl text-[13px] text-white placeholder-white/35 outline-none"
+                  style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.06)" }}
                 />
                 <button
                   onClick={handleSend}

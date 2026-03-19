@@ -105,7 +105,7 @@ export default function Guestbook() {
       ))}
 
       {/* Messages — chat bubble style */}
-      <div ref={scrollRef} className="space-y-3 mb-5 max-h-[350px] overflow-y-auto pr-1">
+      <div ref={scrollRef} className="space-y-4 mb-5 max-h-[350px] overflow-y-auto pr-1">
         {!loaded && (
           <div className="text-center py-8">
             <div className="w-5 h-5 border-2 border-white/20 border-t-white/50 rounded-full animate-spin mx-auto" />
@@ -113,8 +113,8 @@ export default function Guestbook() {
         )}
         {loaded && messages.length === 0 && (
           <div className="text-center py-8">
-            <span className="text-4xl mb-2 block">💬</span>
-            <p className="text-[13px] text-white/30">첫 번째 메시지를 남겨보세요!</p>
+            <span className="text-5xl mb-2 block">💬</span>
+            <p className="text-[14px] text-white/30">첫 번째 메시지를 남겨보세요!</p>
           </div>
         )}
         <AnimatePresence mode="popLayout">
@@ -130,7 +130,7 @@ export default function Guestbook() {
             >
               {/* Avatar */}
               <div
-                className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
                 style={{
                   background: `hsl(${msg.name.charCodeAt(0) * 37 % 360}, 50%, 35%)`,
                 }}
@@ -141,17 +141,17 @@ export default function Guestbook() {
               {/* Bubble */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2 mb-0.5">
-                  <span className="text-[13px] font-semibold text-white/80">{msg.name}</span>
-                  <span className="text-[10px] text-white/20">{timeAgo(msg.created_at)}</span>
+                  <span className="text-[14px] font-semibold text-white/80">{msg.name}</span>
+                  <span className="text-[11px] text-white/20">{timeAgo(msg.created_at)}</span>
                 </div>
                 <div
-                  className="inline-block px-3.5 py-2 rounded-2xl rounded-tl-md max-w-full"
+                  className="inline-block px-4 py-2.5 rounded-2xl rounded-tl-md max-w-full"
                   style={{
-                    background: "rgba(255,255,255,0.08)",
+                    background: "rgba(255,255,255,0.12)",
                     border: "1px solid rgba(255,255,255,0.05)",
                   }}
                 >
-                  <p className="text-[14px] text-white/70 break-words leading-relaxed">{msg.message}</p>
+                  <p className="text-[14px] text-white/90 break-words leading-relaxed">{msg.message}</p>
                 </div>
               </div>
             </motion.div>
@@ -164,8 +164,8 @@ export default function Guestbook() {
         <div
           className="rounded-2xl overflow-hidden"
           style={{
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            background: "rgba(255,255,255,0.08)",
+            border: "1px solid rgba(255,255,255,0.12)",
           }}
         >
           {/* Emoji bar */}
@@ -194,7 +194,7 @@ export default function Guestbook() {
               onChange={(e) => setName(e.target.value)}
               placeholder="이름"
               maxLength={20}
-              className="w-16 flex-shrink-0 px-3 py-2.5 rounded-full text-[13px] text-white placeholder-white/20 outline-none text-center"
+              className="w-16 flex-shrink-0 px-3 py-2.5 rounded-full text-[13px] text-white placeholder-white/35 outline-none text-center"
               style={{ background: "rgba(255,255,255,0.06)" }}
             />
             <div className="flex-1 flex items-center rounded-full px-3" style={{ background: "rgba(255,255,255,0.06)" }}>
@@ -204,13 +204,13 @@ export default function Guestbook() {
                 onChange={(e) => setText(e.target.value)}
                 placeholder="메시지..."
                 maxLength={100}
-                className="flex-1 py-2.5 text-[13px] text-white placeholder-white/20 outline-none bg-transparent"
+                className="flex-1 py-2.5 text-[13px] text-white placeholder-white/35 outline-none bg-transparent"
               />
               <motion.button
                 type="submit"
                 disabled={!name.trim() || !text.trim() || sending}
                 whileTap={{ scale: 0.85 }}
-                className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer disabled:opacity-20 ml-1"
+                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer disabled:opacity-20 ml-1"
                 style={{
                   background: sendSuccess
                     ? "#30D158"
