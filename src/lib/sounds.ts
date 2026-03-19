@@ -33,6 +33,23 @@ export function playSuccess() {
   setTimeout(() => playTone(784, 0.15, "sine", 0.06), 200); // G
 }
 
+export function playBootBeep() {
+  playTone(1200, 0.08, "sine", 0.04);
+}
+
+export function playBootComplete() {
+  playTone(523, 0.1, "sine", 0.05);
+  setTimeout(() => playTone(659, 0.1, "sine", 0.05), 100);
+  setTimeout(() => playTone(784, 0.15, "sine", 0.05), 200);
+  setTimeout(() => playTone(1047, 0.25, "sine", 0.05), 320);
+}
+
+export function playPortalEnter() {
+  // Whoosh + chime
+  playTone(200, 0.3, "sawtooth", 0.03);
+  setTimeout(() => playTone(880, 0.4, "sine", 0.06), 100);
+}
+
 export function playFriendAdd() {
   playTone(440, 0.08, "sine", 0.05);
   setTimeout(() => playTone(554, 0.08, "sine", 0.05), 80);
