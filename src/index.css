@@ -18,7 +18,7 @@
 .apple-glow-border {
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: 9999;
   pointer-events: none;
   border: 2px solid;
   border-image: conic-gradient(

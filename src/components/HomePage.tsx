@@ -8,6 +8,7 @@ import Timeline from "./Timeline";
 import VisitorCount from "./VisitorCount";
 import AdminNotice from "./AdminNotice";
 import ChatBot from "./ChatBot";
+import FriendAdd from "./FriendAdd";
 import { SITE_CONFIG } from "../config/site";
 
 type Tab = "home" | "timeline" | "guestbook";
@@ -229,6 +230,10 @@ export default function HomePage() {
                           <ChevronRight className="w-[18px] h-[18px] text-white/20" />
                         </div>
                       </button>
+                      <div className="ml-[52px] mr-4">
+                        <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+                      </div>
+                      <FriendAdd />
                     </div>
                   </div>
                 </motion.div>
