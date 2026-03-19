@@ -103,7 +103,12 @@ export default function BootSequence({ onComplete }: Props) {
 
     // Progress bar
     const progId = setInterval(() => {
-      setProgress((p) => Math.min(100, p + (100 - p) * 0.03 + 0.3));
+      setProgress((p) => {
+        if (p >= 100) return 100;
+        // Fast start, smooth finish — reaches ~95% by 3.5s, 100% forced at portal
+        const speed = p < 60 ? 1.5 : p < 85 ? 0.8 : 0.4;
+        return Math.min(99, p + speed);
+      });
     }, 30);
 
     // Phase 2: Portal opens
