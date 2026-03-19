@@ -9,8 +9,9 @@ import AdminNotice from "./AdminNotice";
 import ChatBot from "./ChatBot";
 import DynamicIsland from "./DynamicIsland";
 import MinecraftParticles from "./MinecraftParticles";
+import FriendChatFlow from "./FriendChatFlow";
 import { SITE_CONFIG } from "../config/site";
-import { playTabSwitch, playButtonClick, playFriendAdd } from "../lib/sounds";
+import { playTabSwitch, playButtonClick } from "../lib/sounds";
 
 type Tab = "home" | "timeline" | "guestbook";
 
@@ -225,24 +226,12 @@ export default function HomePage() {
                     />
                     {/* Profile */}
                     <div className="absolute bottom-0 left-0 right-0 px-5 pb-5 max-w-[600px] mx-auto">
-                      <div className="flex items-end gap-4">
-                        <div
-                          className="w-[64px] h-[64px] rounded-[16px] flex items-center justify-center flex-shrink-0 avatar-glow"
-                          style={{ background: "linear-gradient(135deg, #30D158 0%, #0EA5E9 100%)" }}
-                        >
-                          <span className="text-[24px] font-bold text-white">L</span>
-                        </div>
-                        <div className="flex-1 min-w-0 pb-0.5">
-                          <h1 className="text-[24px] font-bold leading-tight">
-                            <span className="text-shimmer">LEESIHU</span>
-                            <span className="text-white/30">.ONLINE</span>
-                          </h1>
-                          <p className="text-[13px] text-white/50">Game Creator</p>
-                        </div>
-                      </div>
-                      <div className="mt-3">
-                        <VisitorCount />
-                      </div>
+                      <h1 className="text-[28px] font-bold leading-tight mb-1">
+                        <span className="text-shimmer">LEESIHU</span>
+                        <span className="text-white/25">.ONLINE</span>
+                      </h1>
+                      <p className="text-[13px] text-white/45 mb-3">Game Creator</p>
+                      <VisitorCount />
                     </div>
                   </div>
 
@@ -380,10 +369,12 @@ export default function HomePage() {
           {/* Chatbot */}
           <ChatBot />
 
-          {/* Friend Add Modal */}
-          {showFriendAdd && (
-            <FriendAddModal onClose={() => setShowFriendAdd(false)} />
-          )}
+          {/* Friend Chat Flow */}
+          <AnimatePresence>
+            {showFriendAdd && (
+              <FriendChatFlow onClose={() => setShowFriendAdd(false)} />
+            )}
+          </AnimatePresence>
 
           {/* Tab Bar */}
           <PremiumTabBar
@@ -400,101 +391,4 @@ export default function HomePage() {
   );
 }
 
-/* ─── Friend Add Modal (extracted for conditional render) ─── */
-function FriendAddModal({ onClose }: { onClose: () => void }) {
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [sending, setSending] = useState(false);
-  const [success, setSuccess] = useState(false);
-
-  const handleSubmit = async () => {
-    if (!name.trim() || !phone.trim() || sending) return;
-    setSending(true);
-    const { supabase } = await import("../lib/supabase");
-    await supabase.from("guestbook").insert({
-      name: `🤝 ${name.trim()}`,
-      message: `친구추가 — ${phone.trim()}`,
-      emoji: "🤝",
-    });
-    setSending(false);
-    setSuccess(true);
-    playFriendAdd();
-    setTimeout(onClose, 2500);
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
-      onClick={() => !success && onClose()}
-    >
-      <motion.div
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[360px] rounded-t-3xl sm:rounded-3xl p-6"
-        style={{ background: "rgba(25,25,25,0.98)", border: "1px solid rgba(255,255,255,0.1)" }}
-      >
-        {success ? (
-          <div className="flex flex-col items-center py-8">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 400, damping: 15 }}
-              className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mb-4"
-            >
-              <span className="text-3xl">✅</span>
-            </motion.div>
-            <h3 className="text-[20px] font-bold text-white mb-1">친구추가 완료! 🎉</h3>
-            <p className="text-[14px] text-white/40">{name}님, 환영합니다!</p>
-          </div>
-        ) : (
-          <>
-            <div className="text-center mb-5">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#30D158] to-[#0EA5E9] flex items-center justify-center mx-auto mb-2">
-                <span className="text-2xl">🤝</span>
-              </div>
-              <h3 className="text-[18px] font-bold text-white">친구추가</h3>
-              <p className="text-[12px] text-white/35 mt-0.5">시후와 친구가 되어보세요!</p>
-            </div>
-            <div className="space-y-3 mb-5">
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="이름"
-                maxLength={20}
-                className="w-full px-4 py-3 rounded-xl text-[15px] text-white placeholder-white/20 outline-none"
-                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}
-              />
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="010-0000-0000"
-                maxLength={13}
-                className="w-full px-4 py-3 rounded-xl text-[15px] text-white placeholder-white/20 outline-none"
-                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}
-              />
-            </div>
-            <motion.button
-              onClick={handleSubmit}
-              disabled={!name.trim() || !phone.trim() || sending}
-              whileTap={{ scale: 0.97 }}
-              className="w-full py-3.5 rounded-2xl text-[16px] font-semibold text-white cursor-pointer disabled:opacity-30"
-              style={{
-                background: name.trim() && phone.trim()
-                  ? "linear-gradient(135deg, #30D158, #0EA5E9)" : "rgba(255,255,255,0.06)",
-              }}
-            >
-              {sending ? "처리 중..." : "친구추가 하기"}
-            </motion.button>
-          </>
-        )}
-      </motion.div>
-    </motion.div>
-  );
-}
+/* FriendAddModal removed — replaced by FriendChatFlow */
