@@ -109,7 +109,7 @@ export default function ServerSelect({ open, onClose }: ServerSelectProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.4 }}
-          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          className="fixed inset-0 z-50 flex items-center justify-center px-4 overflow-y-auto py-8"
           onClick={onClose}
         >
           {/* Backdrop with deep blur */}
@@ -206,7 +206,7 @@ export default function ServerSelect({ open, onClose }: ServerSelectProps) {
                 </div>
 
                 {/* Server cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-10">
+                <div className="grid grid-cols-1 gap-4 mb-10">
                   {SITE_CONFIG.servers.map((server, index) => {
                     const status = statusConfig[server.status];
                     const isSelected = selected === server.id;
@@ -266,77 +266,64 @@ export default function ServerSelect({ open, onClose }: ServerSelectProps) {
                           />
                         )}
 
-                        {/* Card content */}
-                        <div className="relative z-10 p-6 md:p-7">
-                          {/* Icon area with glow ring */}
-                          <div className="flex items-center justify-between mb-6">
-                            <div className="relative">
-                              {/* Glow ring behind icon */}
-                              <div
-                                className="absolute inset-0 -m-3 rounded-full transition-all duration-500"
-                                style={{
-                                  background: isSelected
-                                    ? "radial-gradient(circle, rgba(52,211,153,0.12) 0%, transparent 70%)"
-                                    : "transparent",
-                                }}
-                              />
-                              {IconComponent && <IconComponent active={isSelected || isHovered} />}
-                            </div>
-
-                            {/* Status indicator */}
-                            <div className="flex items-center gap-2">
-                              <div className="relative">
-                                <div
-                                  className="w-2 h-2 rounded-full"
-                                  style={{ backgroundColor: status.color }}
-                                />
-                                {status.pulse && (
-                                  <div
-                                    className="absolute inset-0 w-2 h-2 rounded-full animate-ping"
-                                    style={{ backgroundColor: status.color, opacity: 0.4 }}
-                                  />
-                                )}
-                              </div>
-                              <span
-                                className="text-[10px] tracking-[3px] font-medium"
-                                style={{ color: status.color }}
-                              >
-                                {status.label}
-                              </span>
-                            </div>
+                        {/* Card content - horizontal layout */}
+                        <div className="relative z-10 p-5 md:p-6 flex items-center gap-5">
+                          {/* Icon with glow */}
+                          <div className="relative flex-shrink-0">
+                            <div
+                              className="absolute inset-0 -m-3 rounded-full transition-all duration-500"
+                              style={{
+                                background: isSelected
+                                  ? "radial-gradient(circle, rgba(52,211,153,0.12) 0%, transparent 70%)"
+                                  : "transparent",
+                              }}
+                            />
+                            {IconComponent && <IconComponent active={isSelected || isHovered} />}
                           </div>
 
-                          {/* Title */}
-                          <h3
-                            className="font-display text-lg md:text-xl tracking-[6px] mb-2 transition-colors duration-300"
-                            style={{
-                              color: isSelected
-                                ? "rgba(167,243,208,0.95)"
-                                : "rgba(255,240,210,0.85)",
-                            }}
-                          >
-                            {server.name}
-                          </h3>
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <h3
+                              className="font-display text-lg md:text-xl tracking-[6px] mb-1 transition-colors duration-300"
+                              style={{
+                                color: isSelected
+                                  ? "rgba(167,243,208,0.95)"
+                                  : "rgba(255,240,210,0.85)",
+                              }}
+                            >
+                              {server.name}
+                            </h3>
+                            <p
+                              className="text-xs tracking-wide transition-colors duration-300"
+                              style={{
+                                color: isSelected ? "rgba(200,230,210,0.5)" : "rgba(255,255,255,0.3)",
+                              }}
+                            >
+                              {server.description}
+                            </p>
+                          </div>
 
-                          {/* Description */}
-                          <p
-                            className="text-xs tracking-wide transition-colors duration-300"
-                            style={{
-                              color: isSelected ? "rgba(200,230,210,0.5)" : "rgba(255,255,255,0.3)",
-                            }}
-                          >
-                            {server.description}
-                          </p>
-
-                          {/* Bottom decorative line */}
-                          <div
-                            className="mt-5 h-px transition-all duration-500"
-                            style={{
-                              background: isSelected
-                                ? "linear-gradient(to right, rgba(52,211,153,0.3), transparent)"
-                                : "linear-gradient(to right, rgba(255,255,255,0.05), transparent)",
-                            }}
-                          />
+                          {/* Status indicator - right side */}
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="relative">
+                              <div
+                                className="w-2 h-2 rounded-full"
+                                style={{ backgroundColor: status.color }}
+                              />
+                              {status.pulse && (
+                                <div
+                                  className="absolute inset-0 w-2 h-2 rounded-full animate-ping"
+                                  style={{ backgroundColor: status.color, opacity: 0.4 }}
+                                />
+                              )}
+                            </div>
+                            <span
+                              className="text-[10px] tracking-[3px] font-medium"
+                              style={{ color: status.color }}
+                            >
+                              {status.label}
+                            </span>
+                          </div>
                         </div>
                       </motion.button>
                     );

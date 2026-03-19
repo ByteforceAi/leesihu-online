@@ -4,16 +4,19 @@ import ParticleCanvas from "./ParticleCanvas";
 import Stars from "./Stars";
 import ServerSelect from "./ServerSelect";
 import MusicPlayer from "./MusicPlayer";
+import BootSequence from "./BootSequence";
 import { SITE_CONFIG } from "../config/site";
 
 export default function HomePage() {
+  const [booting, setBooting] = useState(true);
   const [phase, setPhase] = useState(0);
   const [showNav, setShowNav] = useState(false);
 
-  // Phase 0 → 1: auto-transition after 500ms
-  useEffect(() => {
-    const timer = setTimeout(() => setPhase(1), 500);
-    return () => clearTimeout(timer);
+  // After boot completes, start Phase 0 → 1 transition
+  const handleBootComplete = useCallback(() => {
+    setBooting(false);
+    // Phase 0 → 1: auto-transition after 500ms
+    setTimeout(() => setPhase(1), 500);
   }, []);
 
   // Phase 2 → 3: auto-transition after 1500ms
@@ -47,7 +50,19 @@ export default function HomePage() {
     >
       {/* Background layer */}
       <div className="absolute inset-0 z-0">
-        {/* CSS gradient background (placeholder for Minecraft image) */}
+        {/* Background image */}
+        <img
+          src="/assets/bg.png"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover transition-all duration-[1500ms] ease-out"
+          style={{ filter: bgFilter }}
+          onError={(e) => {
+            // Fallback: hide image so gradient shows through
+            (e.target as HTMLImageElement).style.display = "none";
+          }}
+        />
+
+        {/* CSS gradient fallback (shows when image missing or as overlay) */}
         <div
           className="absolute inset-0 transition-all duration-[1500ms] ease-out"
           style={{
@@ -58,6 +73,7 @@ export default function HomePage() {
               linear-gradient(to bottom, #0a0f14 0%, #0d1a12 50%, #0a0f14 100%)
             `,
             filter: bgFilter,
+            mixBlendMode: "multiply",
           }}
         />
 
@@ -238,6 +254,9 @@ export default function HomePage() {
 
       {/* Music player */}
       <MusicPlayer />
+
+      {/* Boot sequence overlay */}
+      {booting && <BootSequence onComplete={handleBootComplete} />}
     </div>
   );
 }

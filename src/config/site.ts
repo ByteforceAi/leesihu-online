@@ -11,7 +11,7 @@ export const SITE_CONFIG = {
     {
       id: "game",
       name: "GAME",
-      description: "이시후의 마인크래프트 월드",
+      description: "Chase the Burger — by Sihu",
       status: "smooth" as const,
       url: "https://arcade.makecode.com/14822-55492-85994-94645",
       image: "/assets/game-thumb.jpg",
@@ -20,7 +20,7 @@ export const SITE_CONFIG = {
     {
       id: "simulator",
       name: "SIMULATOR",
-      description: "AI 게임 팩토리",
+      description: "AI Game Factory — AI 게임 생성기",
       status: "smooth" as const,
       url: "https://ai-game-factory.vercel.app/",
       image: "/assets/sim-thumb.jpg",
