@@ -4,8 +4,6 @@ import { SITE_CONFIG } from "../config/site";
 export default function Timeline() {
   return (
     <div>
-      <h2 className="text-lg font-semibold text-white mb-5">타임라인</h2>
-
       <div className="relative">
         {/* Vertical line */}
         <div

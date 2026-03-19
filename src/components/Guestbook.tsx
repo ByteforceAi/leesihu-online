@@ -85,10 +85,9 @@ export default function Guestbook() {
 
   return (
     <div>
-      {/* Section title */}
-      <div className="flex items-center gap-3 mb-5">
-        <h2 className="text-lg font-semibold text-white">방명록</h2>
-        <span className="text-xs text-white/30">
+      {/* Status */}
+      <div className="mb-3 px-1">
+        <span className="text-[11px] text-white/25">
           {!loaded
             ? "불러오는 중..."
             : messages.length > 0
