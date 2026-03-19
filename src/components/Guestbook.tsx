@@ -1,32 +1,17 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Send } from "lucide-react";
+import { supabase } from "../lib/supabase";
 
 interface Message {
-  id: string;
+  id: number;
   name: string;
-  text: string;
-  createdAt: string;
+  message: string;
   emoji: string;
+  created_at: string;
 }
 
 const EMOJIS = ["👋", "🔥", "💜", "⭐", "🎮", "🎵"];
-
-const STORAGE_KEY = "leesihu-guestbook";
-
-// Local storage fallback (works without Supabase)
-function loadMessages(): Message[] {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveMessages(msgs: Message[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs));
-}
 
 export default function Guestbook() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -34,29 +19,56 @@ export default function Guestbook() {
   const [text, setText] = useState("");
   const [selectedEmoji, setSelectedEmoji] = useState("👋");
   const [sending, setSending] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
-  useEffect(() => {
-    setMessages(loadMessages());
+  const fetchMessages = useCallback(async () => {
+    const { data } = await supabase
+      .from("guestbook")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (data) {
+      setMessages(data);
+    }
+    setLoaded(true);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    fetchMessages();
+
+    // Real-time subscription
+    const channel = supabase
+      .channel("guestbook-changes")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "guestbook" },
+        (payload) => {
+          setMessages((prev) => [payload.new as Message, ...prev].slice(0, 50));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchMessages]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !text.trim() || sending) return;
 
     setSending(true);
 
-    const newMsg: Message = {
-      id: Date.now().toString(),
-      name: name.trim(),
-      text: text.trim(),
-      createdAt: new Date().toISOString(),
+    const { error } = await supabase.from("guestbook").insert({
+      name: name.trim().slice(0, 20),
+      message: text.trim().slice(0, 100),
       emoji: selectedEmoji,
-    };
+    });
 
-    const updated = [newMsg, ...messages].slice(0, 50);
-    setMessages(updated);
-    saveMessages(updated);
-    setText("");
+    if (!error) {
+      setText("");
+    }
     setSending(false);
   };
 
@@ -77,7 +89,11 @@ export default function Guestbook() {
       <div className="flex items-center gap-3 mb-5">
         <h2 className="text-lg font-semibold text-white">방명록</h2>
         <span className="text-xs text-white/30">
-          {messages.length > 0 ? `${messages.length}개의 메시지` : "첫 번째 메시지를 남겨보세요"}
+          {!loaded
+            ? "불러오는 중..."
+            : messages.length > 0
+              ? `${messages.length}개의 메시지`
+              : "첫 번째 메시지를 남겨보세요"}
         </span>
       </div>
 
@@ -144,28 +160,32 @@ export default function Guestbook() {
 
       {/* Messages */}
       <div className="space-y-2">
-        {messages.slice(0, 10).map((msg, i) => (
-          <motion.div
-            key={msg.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05, duration: 0.3 }}
-            className="rounded-xl px-4 py-3 flex items-start gap-3"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.05)",
-            }}
-          >
-            <span className="text-base mt-0.5">{msg.emoji}</span>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-sm font-medium text-white/80">{msg.name}</span>
-                <span className="text-[10px] text-white/20">{timeAgo(msg.createdAt)}</span>
+        <AnimatePresence mode="popLayout">
+          {messages.slice(0, 10).map((msg, i) => (
+            <motion.div
+              key={msg.id}
+              initial={{ opacity: 0, y: 10, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ delay: i * 0.03, duration: 0.3 }}
+              layout
+              className="rounded-xl px-4 py-3 flex items-start gap-3"
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.05)",
+              }}
+            >
+              <span className="text-base mt-0.5">{msg.emoji}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-sm font-medium text-white/80">{msg.name}</span>
+                  <span className="text-[10px] text-white/20">{timeAgo(msg.created_at)}</span>
+                </div>
+                <p className="text-sm text-white/50 break-words">{msg.message}</p>
               </div>
-              <p className="text-sm text-white/50 break-words">{msg.text}</p>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </div>
   );
