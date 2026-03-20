@@ -6,6 +6,7 @@ import MineRunner from "./MineRunner";
 import WhackCreeper from "./WhackCreeper";
 import FlappyBlock from "./FlappyBlock";
 import BlockPuzzle from "./BlockPuzzle";
+import TowerDefense from "./TowerDefense";
 
 interface Props {
   onClose: () => void;
@@ -52,6 +53,14 @@ const GAMES: GameInfo[] = [
     desc: "블록을 쌓아 줄을 완성해라!",
     gradient: "linear-gradient(135deg, #845EF7, #6366F1)",
     component: BlockPuzzle,
+  },
+  {
+    id: "tower-defense",
+    icon: "⚔️",
+    title: "타워 디펜스",
+    desc: "좀비와 크리퍼로부터 기지를 지켜라!",
+    gradient: "linear-gradient(135deg, #FF5722, #D32F2F)",
+    component: TowerDefense,
   },
 ];
 
@@ -135,30 +144,7 @@ export default function GameMenu({ onClose }: Props) {
                 </motion.button>
               ))}
 
-              {/* Coming soon cards */}
-              {[
-                { icon: "⚔️", title: "타워 디펜스", desc: "곧 출시!" },
-              ].map((game, i) => (
-                <motion.div
-                  key={game.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: (GAMES.length + i) * 0.08 }}
-                  className="w-full flex items-center gap-4 p-4 rounded-2xl opacity-40"
-                  style={{
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.04)",
-                  }}
-                >
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 bg-white/5">
-                    <span className="text-[24px]">{game.icon}</span>
-                  </div>
-                  <div>
-                    <p className="text-[16px] font-bold text-white/50">{game.title}</p>
-                    <p className="text-[13px] text-white/25 mt-0.5">{game.desc}</p>
-                  </div>
-                </motion.div>
-              ))}
+              {/* All 5 games available! */}
             </div>
           </div>
         </>
