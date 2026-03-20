@@ -5,6 +5,7 @@ import { playButtonClick } from "../lib/sounds";
 import MineRunner from "./MineRunner";
 import WhackCreeper from "./WhackCreeper";
 import FlappyBlock from "./FlappyBlock";
+import BlockPuzzle from "./BlockPuzzle";
 
 interface Props {
   onClose: () => void;
@@ -43,6 +44,14 @@ const GAMES: GameInfo[] = [
     desc: "터치로 날아올라 블록 사이를 통과!",
     gradient: "linear-gradient(135deg, #FFD60A, #FF9F0A)",
     component: FlappyBlock,
+  },
+  {
+    id: "block-puzzle",
+    icon: "🧩",
+    title: "블록 퍼즐",
+    desc: "블록을 쌓아 줄을 완성해라!",
+    gradient: "linear-gradient(135deg, #845EF7, #6366F1)",
+    component: BlockPuzzle,
   },
 ];
 
@@ -128,7 +137,6 @@ export default function GameMenu({ onClose }: Props) {
 
               {/* Coming soon cards */}
               {[
-                { icon: "🧩", title: "블록 퍼즐", desc: "곧 출시!" },
                 { icon: "⚔️", title: "타워 디펜스", desc: "곧 출시!" },
               ].map((game, i) => (
                 <motion.div
