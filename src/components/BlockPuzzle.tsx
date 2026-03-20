@@ -12,7 +12,6 @@ type GameState = "menu" | "playing" | "gameover";
 
 const COLS = 10;
 const ROWS = 20;
-const CELL = 0; // calculated dynamically
 const COLORS = ["#30D158", "#0EA5E9", "#FFD60A", "#FF5722", "#845EF7", "#FF6B6B", "#00BCD4"];
 
 // Tetromino shapes (standard 7 pieces)

@@ -63,9 +63,9 @@ export default function TowerDefense({ onClose }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameState, setGameState] = useState<GameState>("menu");
   const [selectedTower, setSelectedTower] = useState(0);
-  const [gold, setGold] = useState(100);
+  const [, setGold] = useState(100);
   const [wave, setWave] = useState(0);
-  const [lives, setLives] = useState(10);
+  const [, setLives] = useState(10);
   const [lastScore, setLastScore] = useState(0);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
 

@@ -36,8 +36,8 @@ export default function WhackCreeper({ onClose }: Props) {
   const scoreRef = useRef(0);
   const comboRef = useRef(0);
   const effectId = useRef(0);
-  const spawnInterval = useRef<ReturnType<typeof setInterval>>();
-  const timerInterval = useRef<ReturnType<typeof setInterval>>();
+  const spawnInterval = useRef<ReturnType<typeof setInterval>>(undefined);
+  const timerInterval = useRef<ReturnType<typeof setInterval>>(undefined);
 
   /* ── Start game ──────────────────────────────── */
   const startGame = useCallback(() => {
