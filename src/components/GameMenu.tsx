@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { playButtonClick } from "../lib/sounds";
 import MineRunner from "./MineRunner";
 import WhackCreeper from "./WhackCreeper";
+import FlappyBlock from "./FlappyBlock";
 
 interface Props {
   onClose: () => void;
@@ -34,6 +35,14 @@ const GAMES: GameInfo[] = [
     desc: "30초 안에 최대한 많이 잡아라!",
     gradient: "linear-gradient(135deg, #30D158, #1B5E20)",
     component: WhackCreeper,
+  },
+  {
+    id: "flappy-block",
+    icon: "🐔",
+    title: "플래피 블록",
+    desc: "터치로 날아올라 블록 사이를 통과!",
+    gradient: "linear-gradient(135deg, #FFD60A, #FF9F0A)",
+    component: FlappyBlock,
   },
 ];
 
@@ -119,7 +128,6 @@ export default function GameMenu({ onClose }: Props) {
 
               {/* Coming soon cards */}
               {[
-                { icon: "🐦", title: "플래피 블록", desc: "곧 출시!" },
                 { icon: "🧩", title: "블록 퍼즐", desc: "곧 출시!" },
                 { icon: "⚔️", title: "타워 디펜스", desc: "곧 출시!" },
               ].map((game, i) => (
