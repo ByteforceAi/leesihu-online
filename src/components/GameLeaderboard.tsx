@@ -5,6 +5,7 @@ interface Props {
   score: number;
   onRestart: () => void;
   onClose: () => void;
+  gameId?: string;
 }
 
 interface ScoreEntry {
@@ -16,7 +17,7 @@ interface ScoreEntry {
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
-export default function GameLeaderboard({ score, onRestart, onClose }: Props) {
+export default function GameLeaderboard({ score, onRestart, onClose, gameId = "mine-runner" }: Props) {
   const [name, setName] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -31,7 +32,7 @@ export default function GameLeaderboard({ score, onRestart, onClose }: Props) {
       const { data } = await supabase
         .from("game_scores")
         .select("*")
-        .eq("game_id", "mine-runner")
+        .eq("game_id", gameId)
         .order("score", { ascending: false })
         .limit(10);
       if (data) setScores(data);
@@ -52,7 +53,7 @@ export default function GameLeaderboard({ score, onRestart, onClose }: Props) {
     try {
       const { supabase, getSessionId } = await import("../lib/supabase");
       await supabase.from("game_scores").insert({
-        game_id: "mine-runner",
+        game_id: gameId,
         player_name: name.trim(),
         score,
         session_id: getSessionId(),
@@ -64,7 +65,7 @@ export default function GameLeaderboard({ score, onRestart, onClose }: Props) {
       const { data } = await supabase
         .from("game_scores")
         .select("*")
-        .eq("game_id", "mine-runner")
+        .eq("game_id", gameId)
         .order("score", { ascending: false })
         .limit(10);
 

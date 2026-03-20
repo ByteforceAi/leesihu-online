@@ -10,7 +10,7 @@ import ChatBot from "./ChatBot";
 import DynamicIsland from "./DynamicIsland";
 import MinecraftParticles from "./MinecraftParticles";
 import FriendChatFlow from "./FriendChatFlow";
-import MineRunner from "./MineRunner";
+import GameMenu from "./GameMenu";
 import { SITE_CONFIG } from "../config/site";
 import { playTabSwitch, playButtonClick } from "../lib/sounds";
 
@@ -446,7 +446,7 @@ export default function HomePage() {
           {/* Mine Runner Game */}
           <AnimatePresence>
             {showMiniGame && (
-              <MineRunner onClose={() => setShowMiniGame(false)} />
+              <GameMenu onClose={() => setShowMiniGame(false)} />
             )}
           </AnimatePresence>
 
